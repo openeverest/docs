@@ -58,6 +58,15 @@
   color: #ffffff;
 }
 
+.navbar__logo {
+  height: 2.5rem;
+}
+
+/* No external-link arrows next to navbar items (Blog, GitHub). */
+.navbar [class*='iconExternalLink'] {
+  display: none;
+}
+
 .navbar__link {
   color: #ffffff;
   font-weight: 600;

@@ -174,7 +174,7 @@ const config: Config = {
     navbar: {
       logo: {
         alt: 'OpenEverest',
-        src: 'img/logo-horizontal-full-color-white.svg',
+        src: 'img/logo-horizontal-full-color-dark.svg',
         href: 'https://openeverest.io',
         target: '_self',
       },
@@ -206,7 +206,7 @@ const config: Config = {
       style: 'dark',
       logo: {
         alt: 'OpenEverest',
-        src: 'img/logo-horizontal-full-color-white.svg',
+        src: 'img/logo-horizontal-full-color-dark.svg',
         height: 32,
         href: 'https://openeverest.io',
       },
