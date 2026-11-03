@@ -1,0 +1,49 @@
+# Local testing.
+#   docker compose up                    dev server with live reload: http://localhost:5005/docs/next/
+#   docker compose --profile preview up  production build of all versions: http://localhost:5006/docs/
+services:
+  docs:
+    image: node:22
+    working_dir: /app
+    # Released versions are assembled from git tags so the version picker works.
+    command: >
+      sh -c "git config --global --add safe.directory /app
+      && npm ci
+      && npm run versions
+      && npm run start -- --host 0.0.0.0 --poll 1000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "5005:3000"
+    volumes:
+      - .:/app
+      - docs_node_modules:/app/node_modules
+
+  # Full production build, as deployed to GitHub Pages (includes the
+  # /docs/ -> /docs/current/ and /docs/<latest>/ -> /docs/current/ redirects).
+  preview-build:
+    profiles: [preview]
+    image: node:22
+    working_dir: /app
+    command: >
+      sh -c "git config --global --add safe.directory /app
+      && npm ci
+      && npm run build:all"
+    volumes:
+      - .:/app
+      - docs_node_modules:/app/node_modules
+
+  preview:
+    profiles: [preview]
+    image: nginx:alpine
+    depends_on:
+      preview-build:
+        condition: service_completed_successfully
+    ports:
+      - "5006:80"
+    volumes:
+      - ./build:/usr/share/nginx/html/docs:ro
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  docs_node_modules:

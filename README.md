@@ -38,6 +38,20 @@ npm run serve        # serve the production build at http://localhost:3000/docs/
 with all versions and the version picker, run `npm run versions` before
 `npm start`. Make sure your clone has the tags (`git fetch --tags`).
 
+### With Docker
+
+```sh
+docker compose up                    # dev server with live reload
+docker compose --profile preview up  # production build of all versions, served by nginx
+```
+
+* Dev server: http://localhost:5005/docs/next/ (or `/docs/current/`, `/docs/1.16/`, …).
+  It includes all released versions, but redirects such as `/docs/` →
+  `/docs/current/` only exist in production builds.
+* Preview: http://localhost:5006/docs/. This is the same build that is
+  deployed, served like GitHub Pages, so redirects and 404s can be tested.
+  Re-run the command to rebuild after changes.
+
 ## Versions
 
 Released versions are **not stored on `main`**. `npm run versions`
