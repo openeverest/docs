@@ -549,6 +549,11 @@
         },
         {
           "type": "doc",
+          "id": "release-notes/OpenEverest-1.17.0-2026-10-13",
+          "label": "OpenEverest-1.17.0-(2026-10-13)"
+        },
+        {
+          "type": "doc",
           "id": "release-notes/OpenEverest-1.16.2-2026-07-30",
           "label": "OpenEverest-1.16.2-(2026-07-30)"
         },

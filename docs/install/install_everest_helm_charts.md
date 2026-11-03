@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 This section explains how to install OpenEverest using [Helm](https://helm.sh/) as an alternative to `everestctl`. Helm charts simplify the deployment process by packaging all necessary resources and configurations, making them ideal for automating and managing installations in Kubernetes environments.
 
-OpenEverest Helm charts can be found in [openeverest/helm-charts](https://github.com/openeverest/helm-charts/tree/main/charts/everest) repository in Github.
+OpenEverest Helm charts can be found in [openeverest/helm-charts](https://github.com/openeverest/helm-charts/tree/v1.x/charts/everest) repository in Github.
 
 :::info[Important]
 

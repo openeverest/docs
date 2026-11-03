@@ -31,7 +31,7 @@ To seamlessly resume PITR after a restore, make sure to run a new full backup. T
 
 :::warning
 
-For PostgreSQL, point-in-time recovery (PITR) can get stuck in a **Restoring** state when you attempt to recover the database after the last transaction. See the [Limitation for PostgreSQL](createBackups/EnablePITR.md#limitation) section for a workaround.
+For PostgreSQL, point-in-time recovery (PITR) can get stuck in a **Restoring** state when you attempt to recover the database after the last transaction. See the [Limitation for PostgreSQL](createBackups/EnablePITR.md#limitations) section for a workaround.
 
 :::
 

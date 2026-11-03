@@ -33,6 +33,12 @@ This section outlines the step-by-step process for importing backups using the O
         - **Region**: Select the geographical AWS region where your bucket is hosted (e.g., us-east-1, eu-west-1)
         - **Access key**: Enter your AWS Access Key ID (like a username for API access).
         - **Secret key**: Enter your AWS Secret Access Key (like a password for secure API access).
+
+        :::info[Important]
+
+        Enter the **Access key** and **Secret key** in the same format: either both as plain text or both as base64-encoded values. OpenEverest rejects credentials that use mixed formats.
+
+        :::
         
         Click **Save**.
 

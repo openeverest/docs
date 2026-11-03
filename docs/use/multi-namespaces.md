@@ -39,7 +39,7 @@ The following holds true for multiple namespaces:
 - You can [install different operators](../administer/manage_namespaces.md#update-namespaces) in various namespaces using the `everestctl namespaces update [NAMESPACE]` command.
 
 <details>
-<summary>Example: Configuring multiple namesapces and installing various operators within those namespaces</summary>
+<summary>Example: Configuring multiple namespaces and installing various operators within those namespaces</summary>
 
 To install various operators in different namespaces, such as MongoDB and MySQL operator in namespace production, and PostgreSQL operator in namespace development, run the following commands:
 
@@ -80,5 +80,3 @@ Once you have configured your namespaces, you can choose the namespace where you
  ![!image](../images/everest_multi-namespaces.png)
 
 For information on deploying a new database cluster in the namespace, see the [Provision a database](db_provision.md) section.
-
- 

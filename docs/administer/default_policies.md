@@ -44,7 +44,7 @@ Default anti-affinity prevents multiple DB Nodes or Proxies of the same cluster 
 - **DB Node**: The main PostgreSQL database engine instance.
 - **PG Bouncer**: A lightweight connection pooler for PostgreSQL.
 
-The policy ensures separation (that is, allocate each DB cluster or component to a seperate node) between DB Nodes and PG Bouncers. 
+The policy ensures separation (that is, allocate each DB cluster or component to a separate node) between DB Nodes and PG Bouncers.
 
 ![!image](../images/pg_default_policy.png)
 
@@ -63,5 +63,3 @@ This policy prevents multiple replica set members or config servers from failing
 - **DB Node:** Replica set members that handle reads and writes for the complete dataset
 
 This policy is designed to prefer the placement of DB Nodes (replica set members) on separate nodes.
-
- 

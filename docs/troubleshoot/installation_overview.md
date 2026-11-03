@@ -6,9 +6,9 @@ This page provides an overview of how OpenEverest is installed, the components i
 
 Starting with OpenEverest v1.4.0, the [everestctl](../install/installEverest.md) is a wrapper around two helm charts:
 
-- [everest-core](https://github.com/openeverest/helm-charts/tree/main/charts/everest) 
+- [everest-core](https://github.com/openeverest/helm-charts/tree/v1.x/charts/everest) 
 
-- [everest-db-namespace](https://github.com/openeverest/helm-charts/tree/main/charts/everest/charts/everest-db-namespace). 
+- [everest-db-namespace](https://github.com/openeverest/helm-charts/tree/v1.x/charts/everest/charts/everest-db-namespace). 
 
 The installation flow is as follows:
 
@@ -71,9 +71,9 @@ everestctl namespaces update [NAMESPACE]
 everestctl namespaces remove [NAMESPACE]
 ```
 
-For detailed information on managing namespaces, see the [Namespaces management](https://github.com/openeverest/helm-charts/tree/main/charts/everest#4-deploy-additional-database-namespaces) section.
+For detailed information on managing namespaces, see the [Namespaces management](https://github.com/openeverest/helm-charts/tree/v1.x/charts/everest#4-deploy-additional-database-namespaces) section.
 
-The [helm installation method](../install/install_everest_helm_charts.md) provides an identical flow to the one described above, with similar configuration options. Refer to the [helm chart documentation](https://github.com/openeverest/helm-charts/tree/main/charts/everest) for a complete list of available [configuration options](https://github.com/openeverest/helm-charts/tree/main/charts/everest#configuration).
+The [helm installation method](../install/install_everest_helm_charts.md) provides an identical flow to the one described above, with similar configuration options. Refer to the [helm chart documentation](https://github.com/openeverest/helm-charts/tree/v1.x/charts/everest) for a complete list of available [configuration options](https://github.com/openeverest/helm-charts/tree/v1.x/charts/everest#configuration).
 
 ## Server and operator workflow
 
@@ -99,7 +99,7 @@ Here's the database creation workflow in OpenEverest:
 
 Here’s the workflow for the database engine in OpenEverest:
 
-1. You can install the `everest-db-namespace` chart either as part of the initial installation or as a [separate step](https://github.com/openeverest/helm-charts/tree/main/charts/everest#4-deploy-additional-database-namespaces).
+1. You can install the `everest-db-namespace` chart either as part of the initial installation or as a [separate step](https://github.com/openeverest/helm-charts/tree/v1.x/charts/everest#4-deploy-additional-database-namespaces).
 2. OLM subscriptions are created for the operators chosen while installing the Helm chart.
 3. OLM **reconciles the Subscriptions** and creates an **InstallPlan**.
 4. The Helm chart creates a Kubernetes job called `everest-operators-installer` that waits for the `InstallPlan` to be created and approves it.

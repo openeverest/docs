@@ -27,7 +27,7 @@ If you installed OpenEverest using `everestctl`, make sure to uninstall it exclu
 
 :::info[Important]
 
-Starting from version 1.4.0, `everestctl` now uses the [Helm chart](https://github.com/openeverest/helm-charts/tree/main/charts/everest) to install OpenEverest. To configure chart parameters during installation through `everestctl`, you can:
+Starting from version 1.4.0, `everestctl` now uses the [Helm chart](https://github.com/openeverest/helm-charts/tree/v1.x/charts/everest) to install OpenEverest. To configure chart parameters during installation through `everestctl`, you can:
 
 * Use the `--helm.set` flag to specify individual parameter values.
 * Provide a values file with the `--helm.values` flag for bulk configuration.
@@ -69,7 +69,7 @@ To install and provision OpenEverest to Kubernetes:
 
     - **Install OpenEverest using the headless mode**
 
-        1. Run the following command. You can set multiple namepaces in the headless mode. Replace `<namespace-name>` with the desired name for your namespace.
+        1. Run the following command. You can set multiple namespaces in the headless mode. Replace `<namespace-name>` with the desired name for your namespace.
             ```sh
             everestctl install --namespaces <namespace-name1>,<namespace-name2> --operator.mongodb=true --operator.postgresql=true --operator.mysql=true --skip-wizard
             ```

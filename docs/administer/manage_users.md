@@ -72,7 +72,7 @@ To update the password for an existing user:
 everestctl accounts set-password -u <username>
 ```
 
-You will be prompted to update the password.
+You will be prompted to update the password. Passwords for built-in accounts must be at least 8 characters long.
 
 <details>
 <summary>Example</summary>

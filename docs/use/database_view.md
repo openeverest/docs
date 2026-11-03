@@ -66,9 +66,9 @@ The **Backups** tab lists all the backups created for the database. This include
 
 From the ellipsis (...) menu next to the database you can:
 
-- [Restore the backup to database](../backups_and_restore/RestoreBackup.md#RestoreBackup). 
+- [Restore the backup to database](../backups_and_restore/RestoreBackup.md).
 
-- [Create a new database from backup](../backups_and_restore/createBackups/create_new_database.md#create_new_database). 
+- [Create a new database from backup](../backups_and_restore/createBackups/create_new_database.md).
 
     ![!image](../images/database_backups.png)
 

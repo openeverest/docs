@@ -113,7 +113,7 @@ Let's consider a scenario where an employee needs to log into the company portal
 2. OKTA authenticates the user and provides an ID token that includes:
 
     - `openid` - User identifier (sub)
-    - `profile` - Users name, picure, and other profile data
+    - `profile` - Users name, picture, and other profile data
     - `email` - Verified email address
     - `groups` - User's group membership (ProjecTeam,Admins)
 
@@ -136,5 +136,3 @@ p, groupname, database-clusters, *, */
 ```
 
 For additional information, refer to the section on [assigning roles to users](rbac.md#assigning-roles-to-users) in RBAC.
-
-    
