@@ -60,7 +60,7 @@ function editBranch(versionName: string): string {
 }
 
 const config: Config = {
-  title: 'OpenEverest Documentation',
+  title: 'OpenEverest',
   tagline: 'Open source platform for automated database provisioning and management on Kubernetes',
   favicon: 'img/favicon.ico',
 
