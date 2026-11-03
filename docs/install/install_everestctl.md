@@ -22,7 +22,13 @@ The simplest way to install `everestctl` on macOS or Linux is via Homebrew. This
     brew tap openeverest/tap
     ```
 
-2. Install `everestctl`:
+2. Grant trust to the tap (Required for Homebrew 6.0+)
+
+    ```sh
+    brew trust openeverest/tap
+    ```
+
+3. Install `everestctl`:
 
     ```sh
     brew install everestctl

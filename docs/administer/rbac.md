@@ -93,6 +93,8 @@ Below is a comprehensive table outlining the permissions available for various *
 | database-cluster-restores|You can view database cluster restores| You can create database cluster restores|You can modify database cluster restores| You can delete database cluster restores|
 | backup-storages and monitoring-instances |You can view backups and monitoring endpoints| You can create backups and monitoring endpoints|You can modify backups and monitoring endpoints| You can delete backups and monitoring endpoints|
 | database-cluster-credentials|View database data (credentials) <br /> <br />**Note**: If no policy is defined:<br /> * You cannot see the credentials and the connection string.<br /> * You also cannot create a database from any backup.| :x: |:x:| :x:|
+| load-balancer-configs |You can view load balancer configs| You can create load balancer configs|You can modify load balancer configs| You can delete load balancer configs|
+| pod-scheduling-policies |You can view pod scheduling policies| You can create pod scheduling policies|You can modify pod scheduling policies| You can delete pod scheduling policies|
 
 ### Key considerations for RBAC
 
@@ -119,6 +121,11 @@ Example: To manage `backup schedules` (create, update, delete a schedule), it is
 <TabItem value="backups" label="Backups">
 
 For on-demand backups and schedules, you should grant `read` permissions for `backup storages` as well.
+
+</TabItem>
+<TabItem value="load-balancer-configs" label="Load balancer configs">
+
+If a database cluster uses a load balancer config, you must have `read` permissions for `load-balancer-configs` to view that database cluster.
 
 </TabItem>
 <TabItem value="restores" label="Restores">
@@ -171,6 +178,7 @@ p, role:admin, database-cluster-restores, *, */*
 p, role:admin, database-cluster-credentials, *, */*
 p, role:admin, backup-storages, *, */*
 p, role:admin, monitoring-instances, *, */*
+p, role:admin, load-balancer-configs, *, *
 ```
 
 ## RBAC examples
@@ -198,6 +206,8 @@ p, role:namespaceAadmin, database-cluster-restores, *, namespaceA/*
 p, role:namespaceAadmin, database-cluster-credentials, *, namespaceA/*
 p, role:namespaceAadmin, backup-storages, *, namespaceA/*
 p, role:namespaceAadmin, monitoring-instances, *, namespaceA/*
+p, role:namespaceAadmin, load-balancer-configs, *, *
+p, role:namespaceAadmin, pod-scheduling-policies, *, *
 ```
 
 <details>
@@ -213,6 +223,8 @@ The `namespaceAadmin` role has the following privileges within the `namespaceA` 
 - **Database clusters credentials**: `Read` acccess
 - **Backup storages**: `All` access (read, create, update, delete)
 - **Monitoring instances**: `All` access (read, create, update, delete)
+- **Load balancer configs**: `All` access (read, create, update, delete)
+- **Pod scheduling policies**: `All` access (read, create, update, delete)
 
 </details>
 
@@ -231,6 +243,8 @@ p, role:readonly, database-cluster-backups, read, */*
 p, role:readonly, database-cluster-restores, read, */*
 p, role:readonly, backup-storages, read, */*
 p, role:readonly, monitoring-instances, read, */*
+p, role:readonly, load-balancer-configs, read, *
+p, role:readonly, pod-scheduling-policies, read, *
 ```
 
 <details>
@@ -245,6 +259,8 @@ The `readonly`role has the following privileges in all the namespaces:
 - **Database cluster restores**: `Read` access
 - **Backup storages**: `Read` access
 - **Monitoring instances**: `Read` access
+- **Load balancer configs**: `Read` access
+- **Pod scheduling policies**: `Read` access
 
 </details>
 
@@ -261,6 +277,8 @@ p, role:readonlywithcreds, database-cluster-restores, read, */*
 p, role:readonlywithcreds, backup-storages, read, */*
 p, role:readonlywithcreds, monitoring-instances, read, */*
 p, role:readonlywithcreds, database-cluster-credentials, read, */*
+p, role:readonlywithcreds, load-balancer-configs, read, *
+p, role:readonlywithcreds, pod-scheduling-policies, read, *
 ```
 
 <details>
@@ -276,6 +294,8 @@ The `readonlywithcreds` role has the following privileges in all the namespaces:
 - **Backup storages**: `Read` access
 - **Monitoring instances**: `Read` access
 - **Database clusters credentials**: `Read` acccess
+- **Load balancer configs**: `Read` access
+- **Pod scheduling policies**: `Read` access
 
 </details>
 
