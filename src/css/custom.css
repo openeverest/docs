@@ -1,0 +1,155 @@
+/**
+ * OpenEverest documentation theme.
+ * Brand colors: everest-blue #7790de, everest-dark #161641 (same as openeverest.io).
+ * Any CSS included here is global and layered on top of Infima.
+ */
+
+:root {
+  /* Everest-blue ramp, darkened for accessible contrast on white. */
+  --ifm-color-primary: #4f63c4;
+  --ifm-color-primary-dark: #4759b9;
+  --ifm-color-primary-darker: #4354af;
+  --ifm-color-primary-darkest: #384691;
+  --ifm-color-primary-light: #6274cd;
+  --ifm-color-primary-lighter: #7181d2;
+  --ifm-color-primary-lightest: #93a0dd;
+
+  --ifm-code-font-size: 95%;
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
+  --ifm-heading-font-weight: 700;
+
+  --docusaurus-highlighted-code-line-bg: rgba(119, 144, 222, 0.12);
+
+  /* Dark navbar matching openeverest.io header. */
+  --ifm-navbar-background-color: #161641;
+  --ifm-navbar-link-color: #ffffff;
+  --ifm-navbar-link-hover-color: #7790de;
+
+  /* Dark footer matching openeverest.io. */
+  --ifm-footer-background-color: #161641;
+  --ifm-footer-color: #d1d5db;
+  --ifm-footer-link-color: #d1d5db;
+  --ifm-footer-title-color: #ffffff;
+}
+
+/* Lighter palette for dark mode readability. */
+[data-theme='dark'] {
+  --ifm-color-primary: #7790de;
+  --ifm-color-primary-dark: #6980d8;
+  --ifm-color-primary-darker: #6279d6;
+  --ifm-color-primary-darkest: #4f68cf;
+  --ifm-color-primary-light: #8ba0e4;
+  --ifm-color-primary-lighter: #93a7e6;
+  --ifm-color-primary-lightest: #b0beed;
+
+  --ifm-background-color: #0f0f2e;
+  --ifm-background-surface-color: #161641;
+  --docusaurus-highlighted-code-line-bg: rgba(119, 144, 222, 0.2);
+}
+
+/* Keep navbar dark in both color modes. */
+.navbar {
+  --ifm-navbar-background-color: #161641;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.navbar__title {
+  color: #ffffff;
+}
+
+.navbar__link {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.navbar__link:hover {
+  color: #7790de;
+}
+
+.navbar .navbar__toggle,
+.navbar .clean-btn {
+  color: #ffffff;
+}
+
+/* Primary buttons use the brand blue. */
+.button--primary,
+.button--secondary.button--outline {
+  --ifm-button-background-color: #7790de;
+  --ifm-button-border-color: #7790de;
+}
+
+.button {
+  cursor: pointer;
+}
+
+.button.button--primary:not(.button--outline) {
+  --ifm-button-color: #ffffff;
+  color: #ffffff;
+}
+
+.button.button--primary:not(.button--outline):hover,
+.button.button--primary:not(.button--outline):focus-visible {
+  --ifm-button-background-color: #4f63c4;
+  --ifm-button-border-color: #4f63c4;
+  color: #ffffff;
+}
+
+/* Hero banner gradient matching the marketing site. */
+.heroBanner {
+  background: linear-gradient(135deg, #7790de 0%, #161641 100%);
+  color: #ffffff;
+}
+
+
+/* Button-style links (converted from MkDocs Material `.md-button`). */
+.oe-button {
+  display: inline-block;
+  margin: 0.25rem 0.5rem 0.25rem 0;
+}
+
+.oe-button a {
+  display: inline-block;
+  padding: 0.4rem 1.1rem;
+  border: 2px solid var(--ifm-color-primary);
+  border-radius: 0.4rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.oe-button a:hover,
+.oe-button--primary a {
+  background-color: var(--ifm-color-primary);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.oe-button--primary a:hover {
+  background-color: var(--ifm-color-primary-darkest);
+  border-color: var(--ifm-color-primary-darkest);
+}
+
+/* Card grid used on landing pages (converted from `data-grid`/`data-banner`). */
+.oe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.oe-card {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  background: var(--ifm-background-surface-color);
+}
+
+.oe-card h3 {
+  margin-top: 0;
+}
+
+/* Keep icons in converted text aligned with the surrounding text. */
+.oe-icon {
+  font-style: normal;
+}

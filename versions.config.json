@@ -1,0 +1,8 @@
+{
+  "$comment": "Which git tags are published as documentation versions. See README.md#versions.",
+  "majors": 2,
+  "minorsPerMajor": 3,
+  "prereleasesPerMajor": 2,
+  "include": [],
+  "exclude": []
+}
