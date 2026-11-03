@@ -1,0 +1,122 @@
+# Migration: PMM DBaaS to OpenEverest
+
+Migrating from Percona Monitoring and Management (PMM) DBaaS to OpenEverest has many benefits, such as decreased operational overhead, improved scalability, and enhanced flexibility. However, planning and executing the migration is crucial to minimize downtime and ensure data integrity. 
+
+Here's a comprehensive guide to help you through the process.
+
+## Before you migrate
+
+Here are some key differences between OpenEverest and PMM DBaaS:
+
+1. OpenEverest has a separate and configurable namespace for running operators and database clusters, whereas PMM/DBaaS uses a default namespace.
+
+2. OpenEverest `everestctl` is a tool that helps you install and configure operators and monitoring features, whereas this function was previously handled by PMM.
+
+3. OpenEverest has revamped its backup/restore feature, which means that old backups/restores cannot be used.
+
+## Prerequisites
+
+Before getting started with OpenEverest:
+
+1. Install [Docker Engine](https://docs.docker.com/engine/install) (1.13.0 and higher) with the [Docker compose plugin](https://docs.docker.com/compose/install/).
+
+2. Install [curl](https://everything.curl.dev/install/index.html).
+
+3. Install [jq](https://jqlang.github.io/jq/).
+
+4. Set up a publicly accessible Kubernetes cluster. 
+
+    OpenEverest assists with installing all the necessary operators and required packages, but does not currently help with spinning up a publicly accessible Kubernetes cluster.
+
+    We recommend setting up OpenEverest on the Amazon Elastic Kubernetes Service (EKS) or Google Kubernetes Engine (GKE), as OpenEverest may not work as expected on local Kubernetes installations (minikube, kind, k3d, or similar products) due to network issues.
+
+   
+    <span className="oe-button">[Create EKS cluster →](../install/eks.md)</span> <span className="oe-button">[Create GKE cluster →](../install/gke.md)</span>
+
+5. Verify that you have access to the Kubernetes cluster that you want to use with OpenEverest. By default, OpenEverest uses the kubeconfig file available under `~/.kube/config`. 
+
+    To verify access to the Kubernetes cluster, run:
+   
+    ```sh
+    kubectl get nodes
+    ```
+
+    <details>
+    <summary>Expected output</summary>
+
+    ```text
+    NAME                                    STATUS   ROLES    AGE   VERSION
+    gke-<name>-default-pool-75d48bfc-bx8g   Ready    <none>   11h   v1.26.7-gke.500
+    gke-<name>-default-pool-75d48bfc-c2df   Ready    <none>   11h   v1.26.7-gke.500
+    gke-<name>-default-pool-75d48bfc-zl7k   Ready    <none>   11h   v1.26.7-gke.500
+    ```
+
+    </details>
+
+## Migration procedure
+
+To migrate from PMM DBaaS to OpenEverest:
+
+1. [Install Everest](../quick-install.md).
+2. Migrate backup storages from PMM to OpenEverest:
+
+    - Log in to the PMM UI and navigate to the **Backup > Storage Locations** section. The **Storage Location** page opens. You can see the storage locations configured on this page.
+    - Click the downward arrow to see the details of the storage location that are configured.
+    - Log in to OpenEverest and go to the **Backup Storages** section on the UI.
+    - Copy-paste the values from the **details** on the configured storage locations in PMM and paste it to **[Add backup storage](../backups_and_restore/createBackups/backup_storage/CreateStorage.md)** page in OpenEverest.
+
+3. Migrate secrets for database clusters from one Kubernetes cluster to a new cluster using the pattern `everest-secrets-dbclusterName`. 
+
+    Example:
+
+    ```sh
+    export DBNAME=mysql-btknhj
+    export DBTYPE=pxc
+    ```
+
+    :::note[Note]
+
+    The DBTYPE can be `pxc` or `psmdb` depending on whether it is a MySQL or MongoDB database.
+
+    :::
+
+    Get the secret from the kubernetes cluster registered in PMM:
+
+    ```sh
+    kubectl get secret "dbaas-$DBNAME-$DBTYPE-secrets" -o yaml | sed "s/name: dbaas-$DBNAME-.*-
+    secrets/name: everest-secrets-$DBNAME/" | sed "s/namespace: default/namespace: percona-everest/" > 
+    secret.yaml
+    ```
+
+    Apply the secret in the kubernetes cluster registered in Everest:
+
+    ```sh
+    kubectl apply -f secret.yaml
+    ```
+
+    :::note[Note]
+
+    Keep the naming consistent across the two Kubernetes clusters.
+
+    :::
+
+4. [Create a new database cluster](../use/db_provision.md) using the webUI. Run through the creation wizard to select resources, set the name, and configure the backup storage and monitoring of the cluster.
+5. Restore data for your database clusters using the operator's backup and restore features.
+
+    :::note[Note]
+
+    - The restoration won't be available for you in the web UI, you'll need to refer to the corresponding operator's documentation for instructions on how to do this.
+
+        -  For [PXC](https://docs.percona.com/percona-operator-for-mysql/pxc/backups-restore.html)
+        -  For [PSMDB](https://docs.percona.com/percona-operator-for-mongodb/backups-restore.html)
+        -  For [PostgreSQL](https://docs.percona.com/percona-operator-for-postgresql/2.0/backups-restore.html)
+
+    - Each time you run a database cluster, repeat this step.
+
+    :::
+
+6. Disable the DBaaS feature in PMM by navigating to ⚙️ **Configuration** → ⚙️ **Settings** → **Advanced Settings** on the PMM UI and toggling ⏻ the **Database as a Service (DBaaS)** option located in the **Technical preview features** section.
+
+## What's next
+
+After the migration, you can connect to the new database cluster to check if the data has been successfully migrated.

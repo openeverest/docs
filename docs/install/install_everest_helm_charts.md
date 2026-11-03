@@ -1,0 +1,214 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Install OpenEverest using Helm
+
+:::warning[Developer Preview]
+
+This is a **developer preview** release. Features are incomplete and subject to change. The `everestctl` installation method is not available for this release.
+
+:::
+
+This section explains how to install OpenEverest using [Helm](https://helm.sh/). Helm charts simplify the deployment process by packaging all necessary resources and configurations, making them ideal for automating and managing installations in Kubernetes environments.
+
+:::info[Important]
+
+If you installed OpenEverest using Helm, make sure to uninstall it exclusively through Helm for a seamless removal.
+
+:::
+
+## Install OpenEverest
+
+Here are the steps to install OpenEverest:
+
+1. Add the OpenEverest Helm repository:
+
+    ```sh
+    helm repo add openeverest https://openeverest.github.io/helm-charts/
+    helm repo update
+    ```
+
+2. Install OpenEverest:
+
+    ```sh
+    helm install everest-core openeverest/openeverest \
+      --devel \
+      --namespace everest-system \
+      --create-namespace
+    ```
+
+    The `--devel` flag tells Helm to include pre-release versions, so this installs the latest developer preview available in the repository.
+
+    :::tip[Pin a specific version]
+
+    To install an exact release for reproducibility, add the `--version` flag, for example `--version "2.0.0-dev.3"`.
+
+    :::
+
+3. Install the MongoDB Provider:
+
+    ```sh
+    helm install provider-percona-server-mongodb \
+      oci://ghcr.io/openeverest/charts/provider-percona-server-mongodb \
+      --namespace everest-system
+    ```
+
+    :::tip[Find more providers and plugins in the Plugin Hub]
+
+    OpenEverest ships with the **Plugin Hub**, an in-product catalog for discovering additional providers and plugins. Open it in the OpenEverest UI at `/plugins/plugin-hub`, or find it in the left-hand menu. Learn more in the [Extension Hub docs](../extend/hub.md), browse the online catalog at [openeverest.io/extensions ↗](https://openeverest.io/extensions/), or read the [Plugin Hub introduction blog post](https://openeverest.io/blog/the-hub-introduction/).
+
+    :::
+
+4. Once the installation is complete, retrieve the `admin` password. 
+
+    ```sh
+    kubectl get secret everest-accounts -n everest-system -o jsonpath='{.data.users\.yaml}' | base64 --decode  | yq '.admin.passwordHash'
+    ```
+
+    - The default username for logging into the OpenEverest UI is `admin`. You can set a different default admin password by using the `server.initialAdminPassword` parameter during installation.
+
+    - The default `admin` password is stored in plain text. It is highly recommended to update the password after installation.
+
+        To access detailed information on user management, see the [manage users in OpenEverest](../administer/manage_users.md#update-the-password) section.
+
+4. Access the OpenEverest UI/API using one of the following options for exposing it, as OpenEverest is not exposed with an external IP by default:
+
+        
+    <Tabs>
+    <TabItem value="load-balancer" label="Load Balancer">
+
+    Use the following commands to change the Everest service type to `LoadBalancer`:
+
+    1. Run the following command:
+
+        ```sh
+        helm upgrade everest-core openeverest/openeverest \
+        --namespace everest-system \
+        --reuse-values \
+        --set server.service.type=LoadBalancer
+        ```
+
+    2. Retrieve the external IP address for the `everest` service. This is the address where you can then launch OpenEverest at the end of the installation procedure. In this example, the external IP address used is `http://34.175.201.246`.
+
+        ```sh
+        kubectl get svc/everest -n everest-system
+        ```
+
+        <details>
+        <summary>Expected output</summary>
+
+        ```
+        NAME      TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)          AGE
+        everest   LoadBalancer   10.43.172.194   34.175.201.246       8080:8080/TCP    10s
+        ```
+
+        </details>
+
+        <details>
+        <summary>When TLS is enabled</summary>
+
+        ```sh
+        NAME      TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)          AGE
+        everest   LoadBalancer   10.43.172.194   34.175.201.246       443:8080/TCP    10s
+        ```
+
+        </details>
+
+    </TabItem>
+    <TabItem value="node-port" label="Node Port">
+
+    A NodePort is a service that makes a specific port accessible on all nodes within the cluster. It enables external traffic to reach services running within the Kubernetes cluster by assigning a static port to each node's IP address.
+
+    1. Run the following command to change the Everest service type to `NodePort`:
+
+        ```sh
+        helm upgrade everest-core openeverest/openeverest \
+        --namespace everest-system \
+        --reuse-values \
+        --set server.service.type=NodePort
+        ```
+        The following output displays the port assigned by Kubernetes to the everest service, which is `32349` in this case.
+
+        ```sh
+        kubectl get svc/everest -n everest-system
+        NAME      TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+        everest   NodePort   10.43.139.191   <none>        8080:32349/TCP   28m
+        ```
+
+        <details>
+        <summary>When TLS is enabled</summary>
+
+        ```
+        kubectl get svc/everest -n everest-system
+        NAME      TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+        everest   NodePort   10.43.139.191   <none>        443:32349/TCP   28m
+        ```
+
+        </details>
+
+    2. Retrieve the external IP addresses for the kubernetes cluster nodes.
+
+        <details>
+        <summary>Expected output</summary>
+
+        ```sh
+        kubectl get nodes -o wide
+        NAME                   STATUS   ROLES    AGE   VERSION             
+        INTERNAL-IPEXTERNAL-IP  OS-IMAGE                        KERNEL-VERSION   
+        CONTAINER-RUNTIME
+        gke-everest-test-default-pool-8bbed860-65gx   Ready    <none>   3m35s   
+        v1.30.3-gke.1969001   10.204.15.199   34.175.155.135   Container- 
+        Optimized OS from Google   6.1.100+         containerd://1.7.19
+        gke-everest-test-default-pool-8bbed860-pqzb   Ready    <none>   3m35s   
+        v1.30.3-gke.1969001   10.204.15.200   34.175.120.50    Container- 
+        Optimized OS from Google   6.1.100+         containerd://1.7.19
+        gke-everest-test-default-pool-8bbed860-s0hg   Ready    <none>   3m35s   
+        v1.30.3-gke.1969001   10.204.15.201   34.175.201.246   Container- 
+        Optimized OS from Google   6.1.100+         containerd://1.7.19
+        ```
+
+        </details>
+
+    3. To launch the OpenEverest UI and create your first database cluster, go to the IP address/port found in step 1 and 3 (if TLS is enabled). In this example, the external IP address used is `http://34.175.155.135:32349`. Nevertheless, you have the option to use any node IP specified in the above steps.
+
+    </TabItem>
+    <TabItem value="port-forwarding" label="Port Forwarding">
+
+    Run the following command to setup a port-forward to the OpenEverest server service:
+
+    ```sh
+    kubectl port-forward svc/everest 8080:8080 -n everest-system 
+    ```
+
+    To launch the OpenEverest UI and create your first database cluster, go to your localhost IP address `http://127.0.0.1:8080`.
+
+    <details>
+    <summary>When TLS is enabled</summary>
+
+    ```sh
+    kubectl port-forward svc/everest 8443:443 -n everest-system
+    ```
+
+    OpenEverest will be available at `https://127.0.0.1:8443`.
+
+    </details>
+
+    </TabItem>
+    </Tabs>
+
+## Configure parameters
+
+You can customize various parameters in the OpenEverest Helm charts for your deployment to meet your specific needs. Refer to the [Helm documentation](https://helm.sh/docs/chart_best_practices/values/) to discover how to configure these parameters.
+
+A few parameters are listed in the following table. For a detailed list of the parameters, see the [README](https://github.com/openeverest/helm-charts/blob/main/charts/everest/README.md#configuration).
+
+**openeverest/openeverest chart**
+
+|**Key**|**Type**|**Default**|**Description**|
+|------|---------|-----------|---------------|
+|`server.initialAdminPassword`|string|""|Initial password configured for admin user.<br /><br /> If it is not set, a random password is generated. It is recommended to reset the admin password after installation.|
+|`server.oidc`|object|\{\}|OIDC configuration for Everest.<br /><br /> These settings are applied only during installation. To modify the settings after installation, you have to manually update the everest-settings `ConfigMap`.|
+
+## Next steps
+
+<span className="oe-button">[Provision a database →](../use/db_provision.md)</span>
