@@ -46,7 +46,9 @@ for (const v of versionsMeta.versions) {
   if (v.name === lastVersion) {
     versionsConfig[v.name] = {label: `${v.label} (current)`, path: 'current', banner: 'none'};
   } else if (v.prerelease) {
-    versionsConfig[v.name] = {label: `${v.label} (preview)`, path: v.name, banner: 'unreleased'};
+    // Released previews get their own banner from src/theme/DocVersionBanner;
+    // Docusaurus' "unreleased" banner is meant for the unreleased "next" docs.
+    versionsConfig[v.name] = {label: `${v.label} (preview)`, path: v.name, banner: 'none'};
   } else {
     versionsConfig[v.name] = {label: v.label, path: v.name, banner: 'unmaintained'};
   }
@@ -85,6 +87,10 @@ const config: Config = {
   customFields: {
     // Version name -> git tag it was built from, e.g. {"1.17": "v1.17.0"}.
     versionTags: Object.fromEntries(versionsMeta.versions.map((v) => [v.name, v.tag])),
+    // Released prerelease versions, e.g. ["2.0.0-dev.4"]; shown with the preview banner.
+    previewVersions: versionsMeta.versions
+      .filter((v) => v.prerelease && v.name !== lastVersion)
+      .map((v) => v.name),
   },
 
   markdown: {
