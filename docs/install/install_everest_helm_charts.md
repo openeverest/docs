@@ -43,10 +43,10 @@ Check the [prerequisites](prerequisites.md) first.
     ```
 
     ```text
-    NAME                                  READY   STATUS    RESTARTS   AGE
-    everest-controller-5b8dbbc98-l6vg2    1/1     Running   0          40s
-    everest-plugin-hub-86cd7d55f4-p8vc9   1/1     Running   0          40s
-    everest-server-5ffd9fb66f-v4w5l       1/1     Running   0          40s
+    NAME                                      READY   STATUS    RESTARTS   AGE
+    everest-controller-5474b99686-mw5c9       1/1     Running   0          40s
+    everest-core-plugin-hub-566d44f99-k7554   1/1     Running   0          40s
+    everest-server-7b6db64b79-728z8           1/1     Running   0          40s
     ```
 
 4. [Add at least one provider](install_providers.md). Without providers, OpenEverest has no technology to deploy.

@@ -8,14 +8,14 @@ OpenEverest is technology-agnostic: the core installs no database operator, no m
 
 | Release | Installed with | Namespace | Components |
 | --- | --- | --- | --- |
-| Core (`everest-core`) | `openeverest/openeverest` chart | `everest-system` | `everest-server`, `everest-controller`, `everest-plugin-hub`, the OpenEverest CRDs |
+| Core (`everest-core`) | `openeverest/openeverest` chart | `everest-system` | `everest-server`, `everest-controller`, the Plugin Hub, the OpenEverest CRDs |
 | Each provider | The provider's chart | `everest-system` | The provider controller, usually the Kubernetes Operator it drives, its `Provider` resource, backup classes and presets |
 | Each monitoring extension | The extension's chart | `everest-system` | A controller and the `MonitoringClass` it serves |
 | Each generic plugin | The plugin's chart | `everest-system` | The plugin's `Plugin` resource and, optionally, a backend |
 
 - **`everest-server`** serves the UI and the REST API. It authenticates users, checks RBAC, and reads and writes OpenEverest custom resources.
 - **`everest-controller`** runs the technology-agnostic controllers: backup storages, backups, restores, backup imports, monitoring bindings and plugin registration.
-- **`everest-plugin-hub`** is the [Plugin Hub](../extend/hub.md) plugin.
+- **`<release>-plugin-hub`** (for example `everest-core-plugin-hub`) is the [Plugin Hub](../extend/hub.md) plugin.
 
 ## What happens when you create an instance
 

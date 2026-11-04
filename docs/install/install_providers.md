@@ -22,6 +22,7 @@ Install providers into the same namespace as the OpenEverest core, `everest-syst
 ```sh
 helm install provider-percona-postgresql \
   oci://ghcr.io/openeverest/charts/provider-percona-postgresql \
+  --version <provider-version> \
   --namespace everest-system
 ```
 
@@ -35,7 +36,7 @@ The provider appears in the UI immediately: on the **Instances** page, in the **
 
 :::warning[Match the provider and core versions]
 
-During the Developer Preview, the `Instance` and `Provider` APIs still change between releases. Use a provider version that supports your OpenEverest version — the Plugin Hub shows the compatible range for each provider, and each provider's release notes name the core version it was built against.
+During the Developer Preview, the `Instance` and `Provider` APIs still change between releases, and a provider built for a newer OpenEverest may not start on an older one. Without `--version`, Helm installs the newest provider release. Pin a provider version that was built for your OpenEverest version: the OpenEverest release notes and each provider's release notes name the versions that go together.
 
 :::
 
