@@ -1,31 +1,61 @@
-# OpenEverest API
+# API
 
-OpenEverest provides a set of APIs that enable you to access its features programmatically. These APIs provide a convenient and efficient way for developers to interact with the various functionalities of OpenEverest. 
+Everything you can do in the OpenEverest UI, you can also do with the REST API. The UI itself uses the same API.
 
-## Using the API
+## Endpoint
 
-The API is accessible on the same host and port as the OpenEverest Web UI. You can find detailed information about connecting to the OpenEverest Web UI in the [installation guides](install/installEverest.md). For instance, if you are connecting to your OpenEverest instance using port forwarding:
+The API is served on the same address as the UI, under `/v1`. For example, with port forwarding:
 
 ```sh
 kubectl port-forward svc/everest 8080:8080 -n everest-system
 ```
 
-You can then connect to the API via the `http://127.0.0.1:8080` host.
+the API is at `http://localhost:8080/v1`. See [Expose OpenEverest](install/install_everest_helm_charts.md#expose-openeverest) for other options.
 
-### Authentication
+Resources are addressed by cluster and namespace. OpenEverest manages one cluster, called `main`:
 
-Currently, the API only supports authentication via a JWT token. 
-
-You can obtain this JWT token from the Web UI after logging in. For the built-in OpenEverest users you can also obtain this JWT token by calling the following endpoint:
-
-```sh
-curl --location -s '<EVEREST_HOST>/v1/session' --header 'Content-Type: application/json' --data '{"username": "<YOUR_USERNAME>","password": "<YOUR_PASSWORD>"}' | jq -r .token
+```text
+/v1/clusters/main/providers
+/v1/clusters/main/namespaces/{namespace}/instances
+/v1/clusters/main/namespaces/{namespace}/instances/{instance}/connection
+/v1/clusters/main/namespaces/{namespace}/backups
+/v1/clusters/main/namespaces/{namespace}/backup-storages
 ```
 
-## Readme.io API documentation
+## Authentication
 
-While you can achieve many tasks using either the OpenEverest user interface or `everestctl`, leveraging the API allows for easier integration into your technology infrastructure.
+Requests need an access token in the `Authorization` header. For built-in users, get one from the token endpoint with the `password` grant:
 
-Check out our API endpoints for OpenEverest, where you can perform a wide range of functions.
+```sh
+TOKEN=$(curl -s -X POST http://localhost:8080/v1/auth/token \
+  -H 'Content-Type: application/json' \
+  -d '{"grant_type": "password", "username": "admin", "password": "<password>"}' \
+  | jq -r .access_token)
+```
 
-To access the API documentation, click [OpenEverest API](https://openeverest.io/docs/api/).
+The response also contains a `refresh_token`. Access tokens expire after 15 minutes; exchange the refresh token for a new pair with the `refresh_token` grant:
+
+```sh
+curl -s -X POST http://localhost:8080/v1/auth/token \
+  -H 'Content-Type: application/json' \
+  -d '{"grant_type": "refresh_token", "refresh_token": "<refresh token>"}'
+```
+
+To log out, revoke the refresh token with `POST /v1/auth/revoke`. For single sign-on users, use the access token issued by your identity provider. See [Sessions and tokens](security/session_management.md).
+
+Then call the API:
+
+```sh
+curl -s -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8080/v1/clusters/main/namespaces/demo/instances | jq
+```
+
+Every request is checked against [RBAC](administer/rbac.md). `GET /v1/permissions` returns what the current user is allowed to do.
+
+## Rate limits
+
+The API limits the number of requests per second. See [API rate limiting](use/API_rate_limit.md).
+
+## Reference
+
+The full API specification is published as an OpenAPI document in the [openeverest repository](https://github.com/openeverest/openeverest/blob/main/api/openapi/http-api.yaml).

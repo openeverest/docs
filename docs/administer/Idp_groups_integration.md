@@ -1,6 +1,6 @@
 # RBAC: Integration with IdP groups
 
-You can now assign RBAC policies to user groups from an external IDP. This update simplifies permissions management for external users, eliminating the need for unique **Sub IDs** (unique identifiers for authenticated users).
+You can assign RBAC policies to the groups that users belong to in your identity provider (IdP), instead of to each user's unique subject ID (`sub`).
 
 During the SSO authentication, if the group’s scope is requested but the Identity Provider (IdP) lacks the necessary groups claim configuration or does not support it by default, SSO could fail or not function as expected.
 
@@ -74,67 +74,49 @@ To use IdP groups in OpenEverest RBAC, set up the groups claim in your IdP provi
 
     3. Click **Create Rule**.
 
-## Configure OpenEverest to fetch groups from IdP
+## Configure OpenEverest to request groups
 
-During the SSO authentication, if the group's scope is requested but the Identity Provider (IdP), like Okta, lacks the necessary groups claim configuration or does not support it by default, SSO could fail or not function as expected.
+OpenEverest reads group memberships from the `groups` claim of the ID token. Add the `groups` scope to the OIDC configuration, in addition to the default `openid`, `profile` and `email`:
 
-To retrieve the OIDC groups, you need to include the scope by specifying the following fields:
-
+```yaml
+server:
+  oidc:
+    issuerUrl: https://example.okta.com
+    clientId: <client-id>
+    scopes:
+      - openid
+      - profile
+      - email
+      - groups
 ```
-everestctl settings oidc configure --issuer-url <oidc_issuer_url> --client-id <client_id> --scopes openid,profile,email,groups
-```
 
-Take a look at the descriptions of the various fields in the table below:
+See [Single sign-on](../security/sso_idp_integration.md#configure-openeverest) for how to apply this configuration.
 
- **Field**|**Description**|
- |--------|---------------|
- |**scopes openid**|Grants access to the user’s identity, necessary for OIDC flows to issue an ID token with the unique identifier (subject sub).|
-  |**profile**|Grants access basic profile information.|
-  |**email**|Grants access to the user’s email address and its verification status.|
-    |**groups**|Grants access to obtain information about the user’s group memberships.|
+| Scope | Gives access to |
+| --- | --- |
+| `openid` | The user's unique identifier (`sub`). Required. |
+| `profile` | Basic profile information, such as the name. |
+| `email` | The email address and whether it is verified. |
+| `groups` | The groups the user belongs to. |
 
-:::note
+:::warning
 
-The default scope is set to `openid profile email`.
+If OpenEverest requests the `groups` scope but the IdP has no groups claim configured, login can fail. Configure the claim in the IdP first, as shown above for Okta.
 
 :::
 
-<details>
-<summary>Example</summary>
+## Grant permissions to groups
 
-Let's consider a scenario where an employee needs to log into the company portal using SSO.
+Use the group name as the subject in the [RBAC policy](rbac.md), exactly as the IdP sends it. Assign a role to a group:
 
-1. The portal redirects to OKTA and requests the following scope:
-
-    ```
-    everestctl settings oidc configure --issuer-url https://example.com --client-id 123456 --scopes openid,profile,email,groups
-    ```
-
-2. OKTA authenticates the user and provides an ID token that includes:
-
-    - `openid` - User identifier (sub)
-    - `profile` - Users name, picure, and other profile data
-    - `email` - Verified email address
-    - `groups` - User's group membership (ProjecTeam,Admins)
-
-The portal retrieves the group's claim from the ID token and grants access to the appropriate dashboard based on the user's membership.
-
-</details>
-
-## Configure RBAC to assign permissions to the groups
-
-To configure RBAC, you can assign permissions to the groups that a user belongs to. Just specify the name of the group when creating the policy assignment.
-
-```sh
-g, groupname, role:admin
+```text
+g, Admins, role:admin
 ```
 
-Similarly, for policies:
+Or grant permissions directly:
 
-```sh
-p, groupname, database-clusters, *, */
+```text
+p, ProjectTeam, instances, *, main/project-team/*
 ```
 
-For additional information, refer to the section on [assigning roles to users](rbac.md#assigning-roles-to-users) in RBAC.
-
-    
+A user is allowed an action if their subject or any of their groups has the permission.

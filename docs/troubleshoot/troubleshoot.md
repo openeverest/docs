@@ -36,10 +36,15 @@ You can review different logs for additional information depending on the specif
 
 3. **Monitoring**
 
-    | Component                | Command                                                                   |
-    | ------------------------ | ------------------------------------------------------------------------- |
-    | VictoriaMetrics Operator | `kubectl logs -f deploy/vm-operator -n everest-monitoring`                |
-    | VM Agent                 | `kubectl logs -f deploy/vmagent-everest-monitoring -n everest-monitoring` |
+    OpenEverest installs no monitoring stack. Check the state of the monitoring resources, then the logs of the monitoring extension that serves the class:
+
+    ```sh
+    kubectl get monitoringclasses
+    kubectl get monitoringdestinations,monitoringbindings -n <namespace>
+    kubectl logs -f deploy/<monitoring-extension-deployment> -n everest-system
+    ```
+
+    See [Monitoring](../use/monitoring.md#troubleshoot-monitoring).
 
 4. **Database and Proxy Pods**
 

@@ -1,6 +1,6 @@
-# Extension Hub
+# Plugin Hub
 
-The Extension Hub is the central catalog for discovering and installing OpenEverest extensions — both [Providers](providers.md) and [Generic Plugins](generic-plugins.md). It gives the community a single, curated place to publish extensions and gives operators a single place to find and install them.
+The Hub is the central catalog for discovering and installing OpenEverest extensions — both [Providers](providers.md) and [Generic Plugins](generic-plugins.md). It gives the community a single, curated place to publish extensions and gives operators a single place to find and install them.
 
 The Hub has two parts:
 
@@ -74,7 +74,7 @@ For example, installing the Plugin Hub itself manually:
 ```bash
 helm install plugin-hub \
   oci://ghcr.io/openeverest/charts/plugin-hub \
-  --version 0.1.13 \
+  --version 0.1.17 \
   --namespace everest-system
 ```
 
@@ -101,7 +101,7 @@ For the full field reference and step-by-step instructions, see the [publishing 
 
 ## Further reading
 
-- [Extension Hub catalog](https://github.com/openeverest/hub) — the registry repository and `formula.yaml` schema.
+- [Hub catalog](https://github.com/openeverest/hub) — the registry repository and `formula.yaml` schema.
 - [Publishing guide](https://github.com/openeverest/hub/blob/main/docs/PUBLISHING.md) — how to add an extension.
 - [Spec 007 — Extension Hub](https://github.com/openeverest/specs/blob/main/specs/007-extension-hub.md) — the full design.
 - [Providers](providers.md) — database and storage extensions.

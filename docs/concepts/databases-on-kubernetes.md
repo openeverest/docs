@@ -35,7 +35,7 @@ This means:
 
 :::note[What OpenEverest does]
 
-Anti-affinity rules and topology spread constraints are applied automatically when you provision a database cluster. You do not need to write scheduling YAML manually.
+Providers apply anti-affinity rules by default when you create an instance, so you don't need to write scheduling YAML manually. See [Pod scheduling](../administer/pod_scheduling.md).
 
 :::
 

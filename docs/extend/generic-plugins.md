@@ -2,7 +2,7 @@
 
 Generic Plugins extend OpenEverest with new functionality beyond database provisioning. Where a [Provider](providers.md) teaches OpenEverest how to manage a database or storage technology, a Generic Plugin adds new capabilities on top of databases that already exist — without modifying or redeploying the OpenEverest core.
 
-A plugin can contribute UI pages, sidebar entries, database detail panels, backend API logic, and `everestctl` subcommands. It is installed with Helm and appears in the OpenEverest interface immediately.
+A plugin can contribute UI pages, sidebar entries, instance detail panels, backend API logic, and `everestctl` subcommands. It is installed with Helm and appears in the OpenEverest interface immediately.
 
 ## What you can build
 
@@ -34,9 +34,9 @@ The manifest is a `Plugin` Kubernetes custom resource. It declares the plugin's 
 
 ### Frontend bundle
 
-An ESM JavaScript module that registers UI contributions (routes, sidebar entries, database detail tabs, dashboard widgets, and more) into the OpenEverest web UI shell at startup. The shell dynamically imports the bundle and renders the registered components at the declared extension points.
+An ESM JavaScript module that registers UI contributions (routes, sidebar entries, instance detail tabs, dashboard widgets, and more) into the OpenEverest web UI shell at startup. The shell dynamically imports the bundle and renders the registered components at the declared extension points.
 
-Plugin UI must use the host's MUI component library and theme, so plugin-contributed pages feel native to the OpenEverest interface.
+The host shares only React and its design tokens (`--everest-*` CSS variables) with plugins. Each plugin bundles its own UI library; the `@openeverest/plugin-theme` package themes MUI-based plugins from the host's tokens, including dark mode, so plugin pages look native to OpenEverest. A plugin is loaded only if it is compatible with the running OpenEverest version (`spec.compatibleHostVersions` and `spec.compatibleUiContractVersions`).
 
 ### Backend pod
 
@@ -67,17 +67,20 @@ graph TB
   PB -->|OpenEverest API calls| API
 ```
 
-## Installing a plugin
+## Install a plugin
 
-Plugins are distributed as Helm charts.
+Plugins are distributed as Helm charts. Find them in the [Plugin Hub](hub.md), which shows the exact install command for each plugin. The command has this shape:
 
 ```bash
-helm install <plugin-name> <chart-ref> --namespace everest-system
+helm install <plugin-name> \
+  oci://<registry>/<chart> \
+  --version <version> \
+  --namespace everest-system
 ```
 
-After installation, the plugin appears automatically in the OpenEverest UI without any additional configuration.
+After installation, the plugin appears in the OpenEverest UI without any additional configuration. When [RBAC](../administer/rbac.md) is enabled, users need the `use` action on `plugin/<name>` to use it.
 
-## Building your own plugin
+## Build your own plugin
 
 The [generic-plugin-template](https://github.com/openeverest/generic-plugin-template) repository provides a working baseline plugin with skeleton code for both the frontend bundle and backend server, plus GitHub Actions workflows for building releases and Helm charts. It is the recommended starting point for any new plugin.
 

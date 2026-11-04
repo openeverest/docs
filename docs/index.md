@@ -1,60 +1,70 @@
 # Welcome to OpenEverest
 
-We are excited to welcome you to OpenEverest, designed to demonstrate the core capabilities of our new open source cloud-native database platform!
+OpenEverest is an open-source platform for running data workloads on Kubernetes. It gives you one UI, one API and one access-control model for provisioning and operating databases, caches, vector stores, object storage, AI model serving and other stateful technologies — on any Kubernetes cluster, in the cloud or on-premises.
 
-## Why OpenEverest?
+:::warning[Developer Preview]
 
-OpenEverest is the first open-source platform for automated database provisioning and management. It supports multiple database technologies and can be hosted on any Kubernetes infrastructure, in the cloud or on-premises.
+These docs describe OpenEverest 2, which is a **Developer Preview**: it is not feature-complete and not intended for production. OpenEverest 1.x remains the supported release — see the [1.x documentation](https://openeverest.io/docs/current/).
 
-![!image](images/open-everest-docs.png)
-  
-## Ready to test drive OpenEverest?
+:::
 
-Let's start by enabling you to deploy an automated private DBaaS, eliminating vendor lock-in and complex in-house platform development. 
+## How it works
 
-<span className="oe-button">[OpenEverest quickstart guide →](quick-install.md)</span>  <span className="oe-button">[Manage your first cluster →](use/db_provision.md)</span>
+OpenEverest has a small, technology-agnostic core. Everything that is specific to a technology lives in a **Provider** that you install next to the core:
 
-Refer to our documentation, and you'll be set up in no time.
+- The **core** gives you the web UI, the REST API, authentication, role-based access control, backups and monitoring as common building blocks.
+- Each **Provider** teaches OpenEverest how to run one technology, usually by driving a Kubernetes Operator. The [Plugin Hub](extend/hub.md) lists the available providers, and anyone can build a new one.
+- **Generic plugins** add features that are not tied to one technology, such as metrics dashboards or benchmarking tools.
+
+You pick the providers you need. Every running deployment — whatever the technology — is an **Instance** that you create, scale, back up, restore and delete in the same way.
+
+![OpenEverest UI listing the installed providers](images/v2-empty-state.png)
+
+Learn more in [Architecture](concepts/architecture.md) and [Key concepts](concepts/key-concepts.md).
+
+## Get started
+
+<span className="oe-button">[Quickstart →](quick-install.md)</span>  <span className="oe-button">[Create your first instance →](use/create_instance.md)</span>
 
 <div className="oe-grid">
 
 <div className="oe-card">
 
-### 🔭 Discover 
+### Add technologies
 
-Discover how OpenEverest simplifies and streamlines your database management and provisioning.
+Install providers for the technologies you need, and discover more in the Plugin Hub.
 
-<span className="oe-button oe-button--primary">[Discover OpenEverest →](features.md)</span>
-
-</div>
-
-<div className="oe-card">
-
-### 🔒 Secure 
-
-Explore how our security features are designed to ensure the security of your hosted databases.
-
-<span className="oe-button oe-button--primary">[Secure your deployments →](security/sso_idp_integration.md)</span>
+<span className="oe-button oe-button--primary">[Add providers →](install/install_providers.md)</span>
 
 </div>
 
 <div className="oe-card">
 
-### ❓ Troubleshooting 
+### Protect your data
 
-Dive into our troubleshooting section designed to guide you through common issues you may encounter while using OpenEverest.
+Store backups in S3-compatible storage, schedule them, and restore to any point in time.
 
-<span className="oe-button oe-button--primary">[Troubleshoot →](troubleshoot/troubleshoot.md)</span>
+<span className="oe-button oe-button--primary">[Backup and restore →](backups_and_restore/AboutBackups.md)</span>
 
 </div>
 
 <div className="oe-card">
 
-### 🔌 OpenEverest API 
+### Control access
 
-Get ready to dive into our APIs and uncover their potential.
+Connect your identity provider and decide who can do what, down to a single instance.
 
-<span className="oe-button oe-button--primary">[Dive into our APIs →](https://openeverest.io/docs/api/)</span>
+<span className="oe-button oe-button--primary">[Role-based access control →](administer/rbac.md)</span>
+
+</div>
+
+<div className="oe-card">
+
+### Build an extension
+
+Bring a new technology or feature to OpenEverest without changing the core.
+
+<span className="oe-button oe-button--primary">[Extend OpenEverest →](extend/index.md)</span>
 
 </div>
 

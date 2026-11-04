@@ -1,562 +1,179 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+# Role-based access control
 
-# Role-based access control (RBAC)
+Role-based access control (RBAC) decides what each user can see and do in OpenEverest — in the UI and in the API. It is based on [Casbin](https://casbin.org/) policies: you grant actions on resources to users, groups or roles, and you can scope each grant to a namespace or a single object.
 
-Role-based access control (RBAC) restricts access to resources within OpenEverest. It establishes a framework that defines access permissions and privileges according to individual users' roles. With RBAC, only authorized individuals can access specific information or perform certain actions based on their assigned roles. This method improves security by minimizing the risk of unauthorized access and helps manage permissions more efficiently across OpenEverest.
+RBAC is **disabled** by default: every user who can log in can do everything. Enable it before you give other people access.
 
-:::warning
+## Enable RBAC
 
-RBAC will not work if you have configured Single sign-on (SSO) and your identity provider (IdP) is Microsoft Entra.
+RBAC is configured in the `everest-rbac` ConfigMap in the `everest-system` namespace:
 
-:::
-
-## How to enable RBAC
-
-To enable or disable RBAC in OpenEverest, you can use a configuration flag that allows switching between RBAC-enabled and RBAC-disabled modes. By default, RBAC is disabled.
-
-:::info[Important]
-
-The RBAC configuration is stored in a `ConfigMap` named `everest-rbac` within the `everest-system` namespace.
-
-:::
-
-Here's how you can enable RBAC:
-
-```sh
+```yaml
 apiVersion: v1
-data:
-  enabled: "true"
-  policy.csv: |
-    g, admin, role:admin
 kind: ConfigMap
 metadata:
   name: everest-rbac
   namespace: everest-system
+data:
+  enabled: "true"
+  policy.csv: |
+    g, admin, role:admin
 ```
 
-## Policy definition in RBAC
-
-RBAC policies are the rules and guidelines that define how roles, permissions, and users are managed within RBAC. These policies ensure that users have appropriate access to resources based on their roles within OpenEverest.
-
-The policy definition in OpenEverest is:
+Edit it with:
 
 ```sh
-p, <subject>, <resource-type>, <action>, <resource-name>
+kubectl edit configmap everest-rbac -n everest-system
 ```
 
-Where:
+OpenEverest watches the ConfigMap and applies changes within seconds, without a restart.
 
-**subject**: Refers to the name of the role or user. For example, `role:admin` or `admin`
+You can also set the initial policy at installation with the Helm values `server.rbac.enabled` and `server.rbac.policy`. Helm writes the ConfigMap only on installation, and never overwrites it afterwards.
 
-**resource-type**: Refers to the type of OpenEverest resource, such as `namespaces`, `database-clusters`, `database-engines`, etc.
+:::warning
 
-For in-depth information on the actions that a subject can perform, see the [resources and permissions](#rbac-resources-and-permissions) section.
-
-**action**: Refers to the action the subject can perform. For example, `read`, `update`, `delete`, `create`, or `*`
-
-**resource-name**: Refers to a specific instance of the given resource-type. The argument should be prefixed with the namespace in which the resource is present `<namespace>/<resource-name>`. For example, `my-namespace/my-cluster-1`, `my-namespace-2/my-backup-1`, etc. You may also use a wildcard, such as `*`, `*/*`, or `my-namespace/*`
-
-:::info[Important]
-
-If you have permission for specific namespaces or resources, you can perform read, update, create, or delete actions **only** on those resources or **only** within those namespaces. However, if you have permission for **all** the resources or namespaces, you can carry out these actions across all the resources and namespaces.
+Keep at least one user in `role:admin`. If you lock yourself out, edit the ConfigMap with `kubectl`.
 
 :::
 
-Example:
+## Policy format
 
-`p, example-user, database-clusters, read, example-namespace/example-db`
+Each line of `policy.csv` is either a permission (`p`) or a role assignment (`g`):
 
-In this case, the `example-user` user has permissions to read a database called `example-db` in the `example-namespace `namespace.
+```text
+p, <subject>, <resource>, <action>, <object>
+g, <user or group>, <role>
+```
 
-## RBAC resources and permissions
+- **subject** — a user name, a group or a role. Built-in users are matched by user name. SSO users are matched by the `sub` claim of their token, and their groups by the `groups` claim. Role names start with `role:` by convention.
+- **resource** — the type of object, see [Resources](#resources).
+- **action** — see [Actions](#actions). `*` means all actions.
+- **object** — which objects the permission applies to, see [Objects](#objects).
 
-Below is a comprehensive table outlining the permissions available for various **resources**:
-
-<details>
-<summary>Permissions for resources</summary>
-
-:::warning[Important]
-
-:x: Represents an action that's not supported by the OpenEverest API.
-
-:::
-
-**Table: Permissions for the various resources in OpenEverest**
-
-|**Resource**| **Read**| **Create**| **Update**|**Delete**|
-|------------|---------|-----------|-----------|----------|
-| namespaces|You can view namespaces| :x:|:x: | :x:|
-| database-engines <br /> (MySQL, MongoDB, PostgreSQL)|You can view database engines when you create databases<br />  <br />**Note**: This policy must at least be **read all** so the users can create databases.| :x: |Modify database engines| :x:|
-| database-clusters|You can view databases| You can create databases|You can modify databases| You can delete databases|
-| database-cluster-backups|You can view database cluster backups| You can create database cluster backups|:x:| You can delete database cluster backups|
-| database-cluster-restores|You can view database cluster restores| You can create database cluster restores|You can modify database cluster restores| You can delete database cluster restores|
-| backup-storages and monitoring-instances |You can view backups and monitoring endpoints| You can create backups and monitoring endpoints|You can modify backups and monitoring endpoints| You can delete backups and monitoring endpoints|
-| database-cluster-credentials|View database data (credentials) <br /> <br />**Note**: If no policy is defined:<br /> * You cannot see the credentials and the connection string.<br /> * You also cannot create a database from any backup.| :x: |:x:| :x:|
-
-### Key considerations for RBAC
-
-Before you start defining the different roles, there are some important things to consider when it comes to Role-Based Access Control (RBAC).
-
-<Tabs>
-<TabItem value="namespaces" label="Namespaces">
-
-Read `namespaces` permissions are required for **all** the **roles**. 
-
-</TabItem>
-<TabItem value="db-clusters" label=" DB clusters">
-
-To create, update and delete database clusters, backups, schedules, monitoring instances, and restores it is recommended to **explicitly** grant `read` permissions as well for the `database clusters`. Without these permissions, you would not be able to view these resources, which would not be practical.
-
-</TabItem>
-<TabItem value="resources" label="Resources">
-
-To create, update and delete the resources, it is recommended to **explicitly** grant `read` permissions for these resources as well. Without these permissions, you would not be able to view these resources, which would not be practical.
-
-Example: To manage `backup schedules` (create, update, delete a schedule), it is recommended to **explicitly** grant `read` permissions for the `backup schedules` as well as `backup storages`.
-
-</TabItem>
-<TabItem value="backups" label="Backups">
-
-For on-demand backups and schedules, you should grant `read` permissions for `backup storages` as well.
-
-</TabItem>
-<TabItem value="restores" label="Restores">
-
-For restores, to new and existing databases, you should grant the following permisssions as well:
-
-- Read `backups` (of the old DB)
-- Read `MonitoringConfig` (if the old DB has monitoring enabled)
-- Read `database cluster credentials` (of the old DB)
-- Create `backups` (if backup schedules are enabled)
-
-</TabItem>
-<TabItem value="upgrades" label="Upgrades">
-
-For upgrades, the following permissions must be granted:
-
-- Read Namespaces
-- Read all `database engines` in that namespace
-- Read all `database clusters` in that namespace
-- Update `database clusters` in that namespace
-
-</TabItem>
-</Tabs>
-
-</details>
-
-## Roles in RBAC
-
-In Role-Based Access Control (RBAC), a Role is a set of permissions that define what actions (like read, write, update, delete) can be performed on specific resources within OpenEverest. In RBAC, roles are assigned to users, allowing them to interact with the resources according to the permissions defined by their roles.
-
-:::note
-
-It is recommended to prefix role names with **role:** to prevent confusion between role names and user names.
-
-:::
+Wildcards (`*`) are allowed in the resource, the action and the object. A request is allowed if at least one policy allows it.
 
 ### Built-in role
 
-In OpenEverest, the only predefined role is `role:admin`. A user with this role has unrestricted access to OpenEverest. However, the RBAC (Role-Based Access Control) configuration can define and allocate specific roles based on individual requirements and access privileges.
-
-This built-in `role:admin` definition is equivalent to the following:
-
-```sh
-p, role:admin, namespaces, *, *
-p, role:admin, pod-scheduling-policies, *, *
-p, role:admin, database-engines, *, */*
-p, role:admin, database-clusters, *, */*
-p, role:admin, database-cluster-backups, *, */*
-p, role:admin, database-cluster-restores, *, */*
-p, role:admin, database-cluster-credentials, *, */*
-p, role:admin, backup-storages, *, */*
-p, role:admin, monitoring-instances, *, */*
-```
-
-## RBAC examples
-
-In this section, we will explore some examples that demonstrate how to create policy definitions for the required roles.
-
-<details>
-<summary>Examples</summary>
-
-Let's dive into some role definitions for RBAC:
-
-<Tabs>
-<TabItem value="namespace-admin-role" label="Namespace admin role">
-
-**Admin role for a single namepsace**
-
-Let's set up an admin role with unrestricted privileges to all the resources in a single namespace called `namespaceA`.
-
-```sh
-p, role:namespaceAadmin, namespaces, *, namespaceA
-p, role:namespaceAadmin, database-engines, *, namespaceA/*
-p, role:namespaceAadmin, database-clusters, *, namespaceA/*
-p, role:namespaceAadmin, database-cluster-backups, *, namespaceA/*
-p, role:namespaceAadmin, database-cluster-restores, *, namespaceA/*
-p, role:namespaceAadmin, database-cluster-credentials, *, namespaceA/*
-p, role:namespaceAadmin, backup-storages, *, namespaceA/*
-p, role:namespaceAadmin, monitoring-instances, *, namespaceA/*
-```
-
-<details>
-<summary>Let's dive into decoding this!</summary>
-
-The `namespaceAadmin` role has the following privileges within the `namespaceA` namespace:
-
-- **namespace**: `Read` access to the `namespaceA`
-- **Database engines**: `Read` and `update` access
-- **Database clusters**: `All` access (read, create, update, delete)
-- **Database cluster backups**: `All` access (read, create, delete) 
-- **Database cluster rstores**: `All` access (read, create, update, delete) 
-- **Database clusters credentials**: `Read` acccess
-- **Backup storages**: `All` access (read, create, update, delete)
-- **Monitoring instances**: `All` access (read, create, update, delete)
-
-</details>
-
-</TabItem>
-<TabItem value="read-only-role" label="Read only role">
-
-**1. Read only role without access to the database credentials**
-
-Let's set up a read only role with access to all resources in all namespaces with the **exception** of database credentials:
-
-```sh
-p, role:readonly, namespaces, read, *
-p, role:readonly, database-engines, read, */*
-p, role:readonly, database-clusters, read, */*
-p, role:readonly, database-cluster-backups, read, */*
-p, role:readonly, database-cluster-restores, read, */*
-p, role:readonly, backup-storages, read, */*
-p, role:readonly, monitoring-instances, read, */*
-```
-
-<details>
-<summary>Let's dive into decoding this!</summary>
-
-The `readonly`role has the following privileges in all the namespaces:
-
-- **namespace**:  `Read` access to all the namespaces
-- **Database engines**: `Read` access
-- **Database clusters**: `Read` access
-- **Database cluster backups**: `Read` access
-- **Database cluster restores**: `Read` access
-- **Backup storages**: `Read` access
-- **Monitoring instances**: `Read` access
-
-</details>
-
-**2. Read only role with access to the database credentials**
-
-Let's set up a read only role that has read-only access to all resources in all namespaces, **including** access to the database credentials.
-
-```sh
-p, role:readonlywithcreds, namespaces, read, *
-p, role:readonlywithcreds, database-engines, read, */*
-p, role:readonlywithcreds, database-clusters, read, */*
-p, role:readonlywithcreds, database-cluster-backups, read, */*
-p, role:readonlywithcreds, database-cluster-restores, read, */*
-p, role:readonlywithcreds, backup-storages, read, */*
-p, role:readonlywithcreds, monitoring-instances, read, */*
-p, role:readonlywithcreds, database-cluster-credentials, read, */*
-```
-
-<details>
-<summary>Let's dive into decoding this!</summary>
-
-The `readonlywithcreds` role has the following privileges in all the namespaces:
-
-- **namespace**: `Read` access to all the namespaces
-- **Database engines**: `Read` access
-- **Database clusters**: `Read` access
-- **Database cluster backups**: `Read` access
-- **Database cluster restores**: `Read` access
-- **Backup storages**: `Read` access
-- **Monitoring instances**: `Read` access
-- **Database clusters credentials**: `Read` acccess
-
-</details>
-
-</TabItem>
-<TabItem value="database-admin-role" label="Database admin role">
-
-**1. Database admin role with read access to certain resources**
-
-Let's set up a role that has read only access to the `database-engines`, `backup-storages` and `monitoring-instances`. This means that users assigned to this role *can manage the databases* without restriction but *cannot manage the database Kubernetes operators' versions*. They also cannot create, update, or delete `backup-storages` and `monitoring-instances`.
-
-```sh
-p, role:dbadmin, namespaces, *, *
-p, role:dbadmin, database-engines, read, */*
-p, role:dbadmin, database-clusters, *, */*
-p, role:dbadmin, database-cluster-backups, *, */*
-p, role:dbadmin, database-cluster-restores, *, */*
-p, role:dbadmin, database-cluster-credentials, *, */*
-p, role:dbadmin, backup-storages, read, */*
-p, role:dbadmin, monitoring-instances, read, */*
-```
-
-<details>
-<summary>Let's dive into decoding this!</summary>
-
-The `dbadmin` role has the following privileges in **all** the namespaces:
-
-- **namespace**: `Read` access in all the namespaces.
-- **Database engines**: `Read` access to all the database engines
-- **Database clusters**: `All` access (read, create, update, delete)
-- **Database cluster backups**: `All` access (read, create, delete)
-- **Database cluster restores**: `All` access (read, create, update, delete)
-- **Database clusters credentials**: `Read` acccess for **all** the databases       
-- **Backup storages**: `Read` access to all the backup storages
-- **Monitoring instances**: `Read` access to all the monitoring instances
-
-</details>
-
-**2. Database admin role for a single database**
-
-Let's set up a role that has access to only a single database called `databaseA`:
-
-```sh
-p, role:dbadminDatabaseA, namespaces, *, namespaceA
-p, role:dbadminDatabaseA, database-engines, read, namespaceA/*
-p, role:dbadminDatabaseA, database-clusters, *, namespaceA/databaseA
-p, role:dbadminDatabaseA, database-cluster-backups, *, namespaceA/databaseA
-p, role:dbadminDatabaseA, database-cluster-restores, *, namespaceA/databaseA
-p, role:dbadminDatabaseA, database-cluster-credentials, *, namespaceA/databaseA
-p, role:dbadminDatabaseA, backup-storages, read, namespaceA/*
-p, role:dbadminDatabaseA, monitoring-instances, read, namespaceA/*
-```
-
-<details>
-<summary>Let's dive into decoding this!</summary>
-
-This role has the following privileges:
-
-- **namespace**: `Read` access in the namespace `namespaceA`.
-- **Database engines**: `Read` access in the namespace `namespaceA`
-- **Database clusters**: `All` access (read, create, update, delete) in namespace `namespaceA` only for database `databaseA`
-- **Database cluster backups**: `All` access (read, create, delete) in the namespace `namespaceA`
-- **Database cluster restores**: `All` access (read, create, update, delete) in the namespace `namespaceA`
-- **Database clusters credentials**: `Read` acccess for **all** the databases       
-- **Backup storages**: `Read` access to all the backup storagesin the namespace `namespaceA`
-- **Monitoring instances**: `Read` access to all the monitoring instances in the namespace `namespaceA`
-
-</details>
-
-</TabItem>
-</Tabs>
-
-</details>
-
-## More insights into backups and restore policies
-
-Let's dive into different backup and restore policies for OpenEverest.
-
-### Read only role for a single namespace
-
-Let's start with a read only role for a **single** namespace:
-
-```sh
-p, role:exampleA, namespaces, read, namespaceA
-p, role:exampleA, database-engines, read, namespaceA/*
-p, role:exampleA, database-clusters, read, namespaceA/*
-p, role:exampleA, database-cluster-backups, read, namespaceA/*
-p, role:exampleA, database-cluster-restores, read, namespaceA/*
-p, role:exampleA, backup-storages, read, namespaceA/*
-p, role:exampleA, monitoring-instances, read, namespaceA/*
-```
-
-#### Permissions to create on-demand backups
-
-In the policy mentioned [above](#read-only-role-for-a-single-namespace), just add permissions to create on-demand backups.
-
-`p, role:exampleA, database-cluster-backups, create, namespaceA/*`
-
-#### Permissions to manage backup schedules
-
-In the policy mentioned [above](#read-only-role-for-a-single-namespace), just add permissions to manage backup schedules.Backup schedules are part of the database cluster spec, so we require update permissions for the database clusters:
-
-```sh
-p, role:exampleA, database-cluster-backups, create, namespaceA/*
-p, role:exampleA, database-clusters, update, namespaceA/*
-```
-
-#### Permissions to restore a backup to an existing database
-
-In the policy mentioned [above](#read-only-role-for-a-single-namespaceread-only-role-for-a-single-namespace), just add permissions to restore a backup to an existing database:
-
-```sh
-p, role:exampleA, database-cluster-restores, create, namespaceA/*
-p, role:exampleA, database-cluster-credentials, read, namespaceA/*
-```
-
-:::note
-
-You cannot restore the backup to an existing database without having read permissions to the database cluster credentials.
-
-:::
-
-#### Permissions to restore a backup to a new database
-
-In the policy mentioned [above](#read-only-role-for-a-single-namespace), just add permissions to restore a backup to a new database:
-
-```sh
-p, role:exampleA, database-cluster-restores, create, namespaceA/*
-p, role:exampleA, database-cluster-credentials, read, namespaceA/*
-p, role:exampleA, database-clusters, create, namespaceA/*
-```
-
-## Assigning roles to users
-
-In order for roles to take effect, they need to be assigned to users. The syntax for this is as follows:
-
-```sh
-g, username, rolename
-```
-
-A new user in OpenEverest will initially have **no** permissions. To grant permissions, you must edit your RBAC configuration stored in the `everest-rbac` `ConfigMap` in the `everest-system` namespace:
-
-```sh
-kubectl edit cm everest-rbac -n everest-system
-```
-
-A text editor will open, and you can edit the `ConfigMap` as follows. You just have to add the new user and assign it the desired role.
-
-```sh
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: everest-rbac
-data:
-  policy.csv: |
-    g, admin, role:admin
-    g, <newuser>, role:admin
-```
-
-<details>
-<summary>Example</summary>
-
-Let's assign the role `team-dev` to a new user named `john`:
-
-```sh
-p, role:team-dev, namespaces, read, dev
-p, role:team-dev, database-engines, read, dev/*
-p, role:team-dev, database-clusters, read, dev/*
-p, role:team-dev, database-clusters, update, dev/*
-p, role:team-dev, database-clusters, create, dev/*
-p, role:team-dev, database-clusters, delete, dev/*
-p, role:team-dev, database-cluster-credentials, read, dev/*
-g, john, role:team-dev
-```
-
-The `team-dev` role has the following privileges **only** within the `dev` namespace:
-
-- **namespace**:  `Read` access to `dev`
-- **Database engines**: `Read` access
-- **Database clusters**: `Read` access
-- **Database clusters**: `Update` access
-- **Database clusters**: `Create` access
-- **Database clusters**: `Delete` access
-- **Database cluster credentials**: `Read` access
-
-</details>
-
-## Validate your RBAC policy
-
-You can verify whether your Role-based access control (RBAC) policies are functioning correctly by executing the following command:
-
-```sh
-everestctl settings rbac validate --policy-file <file_path>
-```
-
-Where:
-
-`policy-file` is an optional flag that takes the **policy file** path. If you do not specify the path to this file, it will look for the configuration file inside your existing OpenEverest installation, that is, under RBAC `ConfigMap`.
-
-<details>
-<summary>Policy validation</summary>
-
-The following example demonstrates that this is a valid policy.
-
-```sh
-everestctl settings rbac validate --policy-file ./pkg/rbac/testdata/policy-1-good.csv
-```
-Output:
+`role:admin` has every action on every resource. Grant it with:
 
 ```text
-✓ Valid
+g, admin, role:admin
 ```
 
-The following example demonstrates that this is an invalid policy.
+### Resources
 
-```sh
-everestctl settings rbac validate --policy-file ./pkg/rbac/testdata/policy-bad.csv
-```
+| Resource | Object format | What it controls |
+| --- | --- | --- |
+| `namespaces` | `<cluster>/<namespace>` | Which namespaces a user sees. |
+| `providers` | `<cluster>/<provider>` | Installed providers. Users need `read` to create instances. |
+| `instances` | `<cluster>/<namespace>/<instance>` | Instances. |
+| `instance-presets` | `<cluster>/<namespace>/<preset>` | Namespaced instance presets. |
+| `cluster-instance-presets` | `<cluster>/<preset>` | Cluster-wide instance presets. |
+| `backup-storages` | `<cluster>/<namespace>/<storage>` | Backup storages. |
+| `backup-classes` | `<cluster>/<class>` | Backup classes. Users need `read` to configure backups. |
+| `backups` | `<cluster>/<namespace>/<instance>` | Backups **of an instance** — the object is the instance, not the backup. |
+| `restores` | `<cluster>/<namespace>/<instance>` | Restores **into an instance** — the object is the instance. |
+| `backup-imports` | `<cluster>/<namespace>/<name>` | Scanning storages for backups to import. |
+| `monitoring-destinations` | `<cluster>/<namespace>/<name>` | Monitoring destinations. Users need `read` on a destination to use it in an instance. |
+| `monitoring-classes` | `<cluster>/<class>` | Monitoring technologies (read-only). |
+| `monitoring-bindings` | `<cluster>/<namespace>/<name>` | Links between instances and destinations (read-only). |
+| `monitoring-configs` | `<cluster>/<namespace>/<name>` | Legacy monitoring endpoints in **Settings**. Being removed. |
+| `plugins` | `<cluster>/<plugin>` | Registered plugins. |
+| `plugin/<name>` | `*` | Using a plugin's pages and API. |
+| `clusters` | `<cluster>` | Managed Kubernetes clusters. |
 
-output:
+OpenEverest currently manages one Kubernetes cluster, which is always called `main`.
+
+### Actions
+
+| Action | Meaning |
+| --- | --- |
+| `read` | See the object. |
+| `create`, `update`, `delete` | Change the object. |
+| `read-connection` | Read an instance's credentials. **`read` does not include it**, so read-only users can see an instance without seeing its password. |
+| `deploy` | Create an instance with any settings. Users with `create` but without `deploy` can only create instances that match an [instance preset](instance_presets.md) exactly. |
+| `use` | Use a plugin (on the `plugin/<name>` resource). |
+| `*` | All actions. |
+
+### Objects
+
+Objects are paths that start with the cluster name. Use `*` to match any value in a segment:
+
+| Object | Matches |
+| --- | --- |
+| `*/*/*` | Every instance in every namespace. |
+| `main/team-a/*` | Every instance in the `team-a` namespace. |
+| `main/team-a/orders-db` | Only the `orders-db` instance. |
+| `main/*` | Every namespace (for `namespaces`) or every provider (for `providers`). |
+
+## Examples
+
+### Read-only users
 
 ```text
-× Invalid
-policy syntax error - unknown resource name 'non-existent-resource'
+p, role:viewer, namespaces, read, */*
+p, role:viewer, providers, read, */*
+p, role:viewer, backup-classes, read, */*
+p, role:viewer, instances, read, */*/*
+p, role:viewer, backups, read, */*/*
+p, role:viewer, restores, read, */*/*
+p, role:viewer, backup-storages, read, */*/*
+g, alice, role:viewer
 ```
 
-You can also use the same command with the YAML file path containing the everest-rbac ConfigMap. For example:
+Alice can browse everything but can't change anything or see credentials.
 
-```sh
-everestctl settings rbac validate --policy-file ./rbac-config.yaml
-```
-
-</details>
-
-    
-
-## Test your RBAC policy
-
-You can verify if a role or individual (such as a group or a local user) has the necessary privileges to perform particular operations on designated resources. 
-
-We have a straightforward command that can be used to test the RBAC (Role-Based Access Control) policies:
-
-```sh
-everestctl settings rbac can --policy-file <file_path>
-```
-
-Where:
-
-`policy-file` is an optional flag that takes the **policy file** path. If you do not specify the path to this file, it will look for the configuration file inside your existing OpenEverest installation, that is, under RBAC `ConfigMap`.
-
-<details>
-<summary>Test your policy</summary>
-
-The following example tests whether a user, **Alice**, can create database clusters:
-
-```sh
-everestctl settings rbac can alice create database-clusters '*' --policy-file ./pkg/rbac/testdata/policy-1-bad.csv
-```
-Output
+### A team that owns a namespace
 
 ```text
-No
+p, role:team-a, namespaces, read, main/team-a
+p, role:team-a, providers, read, */*
+p, role:team-a, backup-classes, read, */*
+p, role:team-a, instances, *, main/team-a/*
+p, role:team-a, backups, *, main/team-a/*
+p, role:team-a, restores, *, main/team-a/*
+p, role:team-a, backup-storages, *, main/team-a/*
+p, role:team-a, monitoring-destinations, read, main/team-a/*
+p, role:team-a, monitoring-classes, read, */*
+g, bob, role:team-a
+g, team-a-developers, role:team-a
 ```
 
-The following example tests whether an **Admin** user can create database clusters:
+Bob and every member of the `team-a-developers` group from the identity provider can manage instances, backups and restores in the `team-a` namespace, and see nothing else.
 
-```sh
-everestctl settings rbac can admin create database-clusters '*' --policy-file ./pkg/rbac/testdata/policy-1-good.csv
-```
-
-Output:
+### Self-service with presets
 
 ```text
-Yes
+p, role:developer, namespaces, read, main/dev
+p, role:developer, providers, read, */*
+p, role:developer, instance-presets, read, main/dev/*
+p, role:developer, cluster-instance-presets, read, */*
+p, role:developer, instances, create, main/dev/*
+p, role:developer, instances, read, main/dev/*
+p, role:developer, instances, read-connection, main/dev/*
+p, role:developer, instances, delete, main/dev/*
 ```
 
-</details>
+Developers can create instances in `dev` only from presets, because they have `create` but not `deploy`.
 
-## Breaking API changes for RBAC
+### Access to a plugin
 
-Starting from OpenEverest v1.2.0, breaking changes are being implemented to the API for `monitoring-instances` and `backup-storages `resources. Explore further by checking out the section on [Breaking API changes](../api_rbac.md) for a deep dive into this topic.
+```text
+p, role:team-a, plugin/my-plugin, use, *
+```
 
-    
-    
-  
+## Validate a policy
+
+Check a policy file for syntax errors, unknown roles, resources and actions before you apply it:
+
+```sh
+everestctl settings rbac validate --policy-file policy.csv
+```
+
+The validator does not know the `plugin/<name>` resources yet and reports them as unknown; you can ignore that error. `everestctl` is built from source for OpenEverest 2 — see [Users](manage_users.md#manage-built-in-users-with-everestctl).
+
+To see the effective permissions of the current user, call `GET /v1/permissions` in the [API](../API.md).
+
+## Use groups from your identity provider
+
+See [RBAC with IdP groups](Idp_groups_integration.md).

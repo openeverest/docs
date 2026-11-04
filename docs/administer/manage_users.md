@@ -1,159 +1,70 @@
-# Manage users in OpenEverest
+# Users
 
-OpenEverest provides user management capabilities, enabling you to securely log in through either the OpenEverest UI or the API.
+OpenEverest has two kinds of users:
 
-Local user management involves administering OpenEverest users to ensure secure access to database resources. This encompasses tasks such as creating and deleting users, updating their passwords, etc.
+- **Built-in users**, stored in the `everest-accounts` Secret in the `everest-system` namespace. Installation creates the `admin` user.
+- **Single sign-on users** from an OpenID Connect identity provider. They are managed in the identity provider, not in OpenEverest. See [Single sign-on](../security/sso_idp_integration.md).
 
-When you install OpenEverest, an `admin` user is automatically created, granting full access to the system.
+What a user can do is decided by [role-based access control](rbac.md). Built-in users and SSO users are treated the same way.
 
-:::note[Note]
+:::note
 
-We strongly recommend using [Single Sign-On (SSO) integration](../security/sso_idp_integration.md) for the production environment.
+This page is about the users who log in to OpenEverest. To manage the users *inside* your databases, use the connection credentials of each instance (see [Connect to an instance](../use/connect.md)) or look for a user-management plugin in the [Plugin Hub](../extend/hub.md).
 
 :::
 
-## Overview
+## Manage built-in users with everestctl
 
-All user accounts are stored in the YAML format within the `everest-accounts` Secret in the `everest-system` namespace:
+`everestctl accounts` manages built-in users directly through your kubeconfig. It stores passwords as salted hashes.
 
-<details>
-<summary>User accounts: YAML format</summary>
+:::note
 
-```text
-apiVersion: v1
-kind: Secret
-metadata:
-    name: everest-accounts
-    namespace: everest-system
-data:                    
-  users.yaml: YWRtaW46CiAgcGFzc3dvcmRIYXNoOiBhZG1pbgogIGVuYWJsZWQ6IHRydWUKICBjYXBhYmlsaXRpZXM6CiAgICAtIGxvZ2lu
+`everestctl` is not published as a binary for the OpenEverest 2 Developer Preview. Build it from source with `make build-cli` on the release tag of the [openeverest repository](https://github.com/openeverest/openeverest). The `accounts` commands work with OpenEverest 2. Don't use the commands that install components — `install`, `uninstall`, `upgrade` and `namespaces` — they still target OpenEverest 1.x.
+
+:::
+
+| Task | Command |
+| --- | --- |
+| Show the initial `admin` password | `everestctl accounts initial-admin-password` |
+| List users | `everestctl accounts list` |
+| Create a user | `everestctl accounts create --username alice --password "$PASSWORD"` |
+| Change a password | `everestctl accounts set-password --username alice --new-password "$PASSWORD"` |
+| Delete a user | `everestctl accounts delete --username alice` |
+| Sign out all users | `everestctl accounts reset-jwt-keys` |
+
+Omit `--password` to be prompted for it instead.
+
+New users can log in but have no permissions until you grant them a role. See [RBAC](rbac.md).
+
+## Change the admin password without everestctl
+
+The initial `admin` password is stored in plain text and marked as such with an annotation on the Secret. You can replace it with `kubectl` and `yq`:
+
+```sh
+kubectl get secret everest-accounts -n everest-system -o yaml | \
+  yq '.data."users.yaml" |= (@base64d | from_yaml | .admin.passwordHash = "<NEW_PASSWORD>" | to_yaml | @base64)' | \
+  kubectl apply -f -
 ```
 
-</details>
+The new password is also stored in plain text. Use `everestctl accounts set-password` to store it as a hash, or switch to [single sign-on](../security/sso_idp_integration.md) and disable the `admin` user.
 
-Decoding the base64 encoded value will yield a YAML that appears as follows:
+## How built-in users are stored
 
-<details>
-<summary>YAML after decoding</summary>
+The `users.yaml` key of the `everest-accounts` Secret holds one entry per user:
 
-```text
+```yaml
 admin:
-    passwordHash: <password>
-enabled: true
-capabilities:
+  enabled: true
+  capabilities:
     - login
+  passwordHash: <hash>
+  passwordMtime: "2026-11-04T09:30:00Z"
 ```
 
-</details>
+- `enabled: false` blocks the user from logging in.
+- `capabilities` lists what the account can be used for. `login` allows logging in to the UI and getting API tokens.
+- Changing a password updates `passwordMtime`, which invalidates the user's existing sessions.
 
-## User management commands
+## Sessions
 
-This section provides a list of `everestctl` commands for managing users in OpenEverest.
-
-### Retrieve password
-
-You can retrieve the password for the `admin` user by running the following command:
-
-```sh
-everestctl accounts initial-admin-password
-```
-
-:::note[Note]
-
-The passwords in this Secret are stored as hashes. However, the initial admin user has the password stored as plain text for convenient retrieval later on. We strongly recommend that you update the admin password after installation.
-
-:::
-
-### Update the password
-
-To update the password for an existing user:
-
-```sh
-everestctl accounts set-password -u <username>
-```
-
-You will be prompted to update the password.
-
-<details>
-<summary>Example</summary>
-
-```text
-? Enter new password **********
-? Re-enter new password **********
-```
-
-</details>
-
-### Create a new user
-
-To create a new user:
-
-```sh
-everestctl accounts create -u <username>
-```
-You will be prompted to enter the password for this user.
-
-<details>
-<summary>Example</summary>
-
-```text
-? Enter new password **********
-P2024-06-27T08:11:34Z    info    cli/accounts.go:141    User 'rasika' has been created    {"component": "accounts"}
-```
-
-</details>
-
-:::info[Important]
-
-For OpenEverest versions 1.0.0 and later, new users have full access to the system. However, once RBAC support is in place, an admin user will be able to manage permissions for users, granting them fine-grained control over database resources.
-
-:::
-
-For detailed information on granting permissions to new users, see [assign permissions to a new user](rbac.md#assign-users-to-a-group-and-grant-them-permissions) section.
-
-### List the users
-
-To list all the users in OpenEverest:
-
-```sh
-everestctl accounts list
-```
-
-### Delete a user
-
-To delete an existing user:
-
-```sh
-everestctl accounts delete -u <username>
-```
-
-## JSON Web Token (JWT) and keys
-
-When you log in from the UI, OpenEverest issues a JSON Web Token to authenticate the requests. By default, this token is valid for **24** hours, after which you are expected to log in again.
-
-:::info[Important]
-
-Since JWT authentication is stateless, it is currently impossible to explicitly revoke specific tokens. Therefore, even a deleted user may continue to request the API as long as they have a valid token.
-
-:::
-
-The OpenEverest API uses the RSA algorithm to sign and verify the JWT. The RSA key pair used for this is automatically generated upon installation and stored in the `everest-jwt` Secret in the `everest-system` namespace.
-
-```
-    apiVersion: v1
-    data:
-        id_rsa: <PRIVATE KEY>
-        id_rsa.pub: <PUBLIC KEY>
-    kind: Secret
-    metadata:
-        name: everest-jwt
-        namespace: everest-system
-    type: Opaque
-```
-
-To reset the key pair:
-    
-```
-everestctl accounts reset-jwt-keys
-```
-    
+Logging in issues a short-lived access token and a refresh token. See [Sessions and tokens](../security/session_management.md).

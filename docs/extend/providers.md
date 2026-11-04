@@ -1,6 +1,6 @@
 # Providers
 
-A Provider is a self-contained plugin that adds a database or a storage technology to OpenEverest. It encapsulates everything the platform needs to provision, manage, and expose a database — the reconciliation logic for the underlying Kubernetes operator, the set of available components and topologies, and the UI schema that drives the create and edit forms.
+A provider is a self-contained extension that adds a technology to OpenEverest — a database, a cache, a storage system or an AI serving stack. It encapsulates everything the platform needs to provision, manage, and expose a database — the reconciliation logic for the underlying Kubernetes operator, the set of available components and topologies, and the UI schema that drives the create and edit forms.
 
 Providers are decoupled from the OpenEverest core. They are installed and upgraded independently using standard Helm workflows, and a change to a Provider never requires a new release of the OpenEverest server or operator.
 
@@ -48,32 +48,11 @@ Each Provider ships a YAML-based UI schema alongside its topology definitions. O
 
 This also means a single Provider can surface multiple topologies natively. For example, the MongoDB Provider offers both `replicaset` and `sharded` topologies. The user selects a topology; the Provider handles the rest.
 
-## Available Providers
+## Find and install providers
 
-A Provider Hub is planned for a future release, giving users a central place to discover and install community-contributed Providers.
+Browse the available providers in the [Plugin Hub](hub.md), and see [Add providers](../install/install_providers.md) for how to install, upgrade and remove them.
 
-### Percona Server for MongoDB Provider
-
-The **Percona Server for MongoDB Provider** is the reference implementation for the v2 Provider model. It was chosen as the first provider because of its operational complexity — multiple component types, proxy and config server roles, backup agent, and sharded cluster support — which validates that the Provider architecture is robust enough for any database technology.
-
-- Repository: [openeverest/provider-percona-server-mongodb](https://github.com/openeverest/provider-percona-server-mongodb)
-
-**Install:**
-
-```bash
-helm install provider-percona-server-mongodb \
-  oci://ghcr.io/openeverest/charts/provider-percona-server-mongodb \
-  -n everest-system
-```
-
-**Upgrade:**
-
-```bash
-helm upgrade provider-percona-server-mongodb provider-percona-server-mongodb/provider-percona-server-mongodb \
-  --namespace everest-system
-```
-
-## Building your own Provider
+## Build your own provider
 
 The [Provider SDK](https://github.com/openeverest/provider-sdk) is an open Go SDK designed to lower the barrier to building new Providers. It provides the reconciler scaffolding, lifecycle helpers, status utilities, and HTTP server for the validation webhook, so that provider authors focus on database-specific logic rather than Kubernetes plumbing.
 

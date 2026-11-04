@@ -1,317 +1,132 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+# Quickstart
 
-# OpenEverest quick install guide
+This guide installs OpenEverest on an existing Kubernetes cluster, adds a provider, and creates your first instance. It takes about ten minutes.
 
 :::warning[Developer Preview]
 
-This is a **developer preview** release. Features are incomplete and subject to change. The `everestctl` installation method is not available for this release.
+OpenEverest 2 is a Developer Preview and is not intended for production. Install it on a fresh cluster: there is no upgrade path from OpenEverest 1.x yet, and running 1.x and 2 in the same cluster is not supported.
 
 :::
 
-With this guide, you'll be up and running with OpenEverest in no time. For more details, see the comprehensive [installation guide](install/install_everest_helm_charts.md).
+## Before you start
 
-## Prerequisites
+You need:
 
-Before getting started with OpenEverest, do the following:
+- A Kubernetes cluster, version 1.32 or later, with a default StorageClass. A local cluster such as [k3d](https://k3d.io/) or [kind](https://kind.sigs.k8s.io/) is fine for trying OpenEverest out. See [Prerequisites](install/prerequisites.md) for details.
+- [`kubectl`](https://kubernetes.io/docs/tasks/tools/) configured to access the cluster.
+- [Helm](https://helm.sh/docs/intro/install/) 3.
 
-1. Install [Helm v3  ↗](https://docs.helm.sh/using_helm/#installing-helm).
+Check that you can reach the cluster:
 
-2. Set up a Kubernetes cluster.
-     
-    :::note[Note]
+```sh
+kubectl get nodes
+```
 
-      OpenEverest assists with installing all the necessary operators and required packages, but does not deploy a Kubernetes cluster.
+## 1. Install OpenEverest
 
-     We recommend setting up OpenEverest on the Amazon Elastic Kubernetes Service (EKS) or Google Kubernetes Engine (GKE).
+Add the OpenEverest Helm repository and install the core into the `everest-system` namespace:
 
-    <span className="oe-button">[Create EKS cluster →](install/eks.md)</span>  <span className="oe-button">[Create GKE cluster →](install/gke.md)</span>
+```sh
+helm repo add openeverest https://openeverest.github.io/helm-charts/
+helm repo update
+helm install everest-core openeverest/openeverest \
+  --devel \
+  --namespace everest-system \
+  --create-namespace
+```
 
-    :::
+`--devel` lets Helm pick pre-release versions such as `2.0.0-dev.4`. To pin a version, add `--version <version>`.
 
-3. Verify that you have access to the Kubernetes cluster that you want to use with OpenEverest. By default, OpenEverest uses the kubeconfig file available under `~/.kube/config`. 
+Wait until the pods are running:
 
-     If your file is located elsewhere, use the export command below to set the `KUBECONFIG` environment variable:
-    
-     ```sh
-     export KUBECONFIG=~/.kube/config
-     ```
+```sh
+kubectl get pods -n everest-system
+```
 
-     To verify access to the Kubernetes cluster, run the following command:
-   
-     ```sh
-     kubectl get nodes
-     ```
+```text
+NAME                                  READY   STATUS    RESTARTS   AGE
+everest-controller-5b8dbbc98-l6vg2    1/1     Running   0          40s
+everest-plugin-hub-86cd7d55f4-p8vc9   1/1     Running   0          40s
+everest-server-5ffd9fb66f-v4w5l       1/1     Running   0          40s
+```
 
-    <details>
-    <summary>Expected output</summary>
+## 2. Add a provider
 
-    ```text
-    NAME                                    STATUS   ROLES    AGE   VERSION
-    gke-<name>-default-pool-75d48bfc-bx8g   Ready    <none>   11h   v1.26.7-gke.500
-    gke-<name>-default-pool-75d48bfc-c2df   Ready    <none>   11h   v1.26.7-gke.500
-    gke-<name>-default-pool-75d48bfc-zl7k   Ready    <none>   11h   v1.26.7-gke.500
-    ```
+The core does not run any technology by itself. Install at least one [provider](extend/providers.md) into the same namespace. This guide uses the PostgreSQL provider:
 
-    </details>
+```sh
+helm install provider-percona-postgresql \
+  oci://ghcr.io/openeverest/charts/provider-percona-postgresql \
+  --namespace everest-system
+```
 
-## Install OpenEverest
+The provider chart also installs the Kubernetes Operator it drives. Check that the provider is registered:
 
-To install OpenEverest using Helm follow these steps:
+```sh
+kubectl get providers
+```
 
-1. Add the OpenEverest Helm repository and install the core platform.
+```text
+NAME                          AGE
+provider-percona-postgresql   90s
+```
 
-    ```sh
-    helm repo add openeverest https://openeverest.github.io/helm-charts/
-    helm repo update
-    helm install everest-core openeverest/openeverest \
-      --devel \
-      --namespace everest-system \
-      --create-namespace
-    ```
+To use other technologies, find their providers in the **Plugin Hub** inside OpenEverest. You can install as many as you need. See [Add providers](install/install_providers.md).
 
-    The `--devel` flag tells Helm to include pre-release versions, so this installs the latest developer preview available in the repository. To pin an exact release, add `--version`, for example `--version "2.0.0-dev.3"`.
+## 3. Log in
 
-2. Install the MongoDB Provider.
-
-    ```sh
-    helm install provider-percona-server-mongodb \
-      oci://ghcr.io/openeverest/charts/provider-percona-server-mongodb \
-      -n everest-system
-    ```
-
-    :::tip[Find more providers and plugins in the Plugin Hub]
-
-    OpenEverest now ships with the **Plugin Hub**, an in-product catalog for discovering additional providers and plugins. Open it in the OpenEverest UI at `/plugins/plugin-hub`, or find it in the left-hand menu. Learn more in the [Extension Hub docs](extend/hub.md) and the [Plugin Hub introduction blog post](https://openeverest.io/blog/the-hub-introduction/).
-
-    :::
-
-    <details>
-    <summary> 🌐 Install OpenEverest and access it using Ingress</summary>
-
-    **Prerequisite**
-
-    - An Ingress controller (e.g., Nginx) installed on your Kubernetes cluster
-
-    - If TLS is required on your Ingress endpoint, a **Secret** containing the TLS certificates
-
-    **Example**
-
-    To install OpenEverest and access using [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/#what-is-ingress), here are the steps:
-
-    1. Install OpenEverest:
-
-        ```sh
-        helm install everest openeverest/openeverest \
-          -n everest-system \
-          --set ingress.enabled=true \
-          --set ingress.ingressClassName="" \
-          --set ingress.hosts[0].host=everest.example.com \
-          --set ingress.hosts[0].paths[0].path=/ \
-          --set  ingress.hosts[0].paths[0].pathType=ImplementationSpecific
-        ```
-        Replace `everest.example.com` with your own domain.
-
-    3. Verify Ingress:
-
-        ```sh
-        kubectl get ingress -n everest-system
-        ```
-
-        Make sure the address provided is valid and that it correctly routes to the `everest` service.
-
-    <details>
-    <summary>Example: Custom YAML configuration file</summary>
+1. Get the password of the `admin` user:
 
     ```sh
-    ingress:
-    # -- Enable ingress for Everest server
-    enabled: true
-    # -- Ingress class name. This is used to specify which ingress controller should handle this ingress.
-    ingressClassName: "nginx"
-    # -- Additional annotations for the ingress resource.
-    annotations: {}
-    # -- List of hosts and their paths for the ingress resource.
-    hosts:
-        - host: everest.example.com
-          paths:
-            - path: /
-              pathType: ImplementationSpecific
-    # -- TLS configuration for the ingress resource.
-    # -- Each entry in the list specifies a TLS certificate and the hosts it applies to.
-    tls: []
-    #  - secretName: everest-tls
-    #    hosts:
-    #      - everest.example.com
+    kubectl get secret everest-accounts -n everest-system \
+      -o jsonpath='{.data.users\.yaml}' | base64 --decode | yq '.admin.passwordHash'
     ```
-    Install OpenEverest using this file:
+
+    To choose the password yourself, add `--set server.initialAdminPassword=<password>` to the `helm install` command in step 1. Either way, [change it](administer/manage_users.md) after you log in.
+
+2. Forward the OpenEverest service to your machine:
 
     ```sh
-    helm install everest openeverest/openeverest \
-    -n everest-system \
-    -f everest-values.yaml
+    kubectl port-forward svc/everest 8080:8080 -n everest-system
     ```
 
-    </details>
+3. Open [http://localhost:8080](http://localhost:8080) and log in as `admin`.
 
-    </details>
+To expose OpenEverest permanently with a load balancer or an Ingress, see [Install OpenEverest](install/install_everest_helm_charts.md#expose-openeverest).
 
-    <details>
-    <summary>🔒 Install OpenEverest with TLS enabled</summary>
+## 4. Create your first instance
 
-    Install OpenEverest with TLS enabled:
+Instances live in namespaces of your choice. Create one for this guide:
 
-    ```sh
-    helm install everest openeverest/openeverest \
-    --namespace everest-system \
-    --create-namespace
-    --set server.tls.enabled=true
-    ```
+```sh
+kubectl create namespace demo
+```
 
-    For comprehensive instructions on enabling TLS for OpenEverest, see the section [TLS setup with OpenEverest](security/tls_setup.md#tls-setup-with-percona-everest).
+1. On the **Instances** page, click the provider you installed.
 
-    </details>
+    ![The Instances page lists the installed providers](images/v2-empty-state.png)
 
-    Once OpenEverest is running successfully, you can install additional Providers from the [Providers](extend/providers.md) page.
+2. Select the `demo` namespace and enter a display name. The summary on the right shows the defaults the provider will use.
 
-    :::note
+    ![Create an instance with the provider defaults](images/v2-create-quick.png)
 
-    - If you installed OpenEverest using `helm` and need to uninstall it, make sure to uninstall it exclusively through `helm` for seamless removal.
+3. Click **Create**.
 
-    :::
+The instance appears in the list with the status **Initializing** and becomes **Ready** when all its components are running. You can follow the same progress with `kubectl`:
 
-## Post-installation steps
+```sh
+kubectl get instances -n demo
+```
 
-Once you have successfully installed OpenEverest, proceed with the following steps:
-
-1. Retrieve the `admin` password.
-
-    ```sh
-    kubectl get secret everest-accounts -n everest-system -o jsonpath='{.data.users\.yaml}' | base64 --decode  | yq '.admin.passwordHash'
-    ```
-
-    :::note
-
-    The default admin password is stored in plain text. It is highly recommended to update the password after installation.
-
-    :::
-
-    For information on user management, see the section [manage users in OpenEverest](administer/manage_users.md).
-
-2.  Access the OpenEverest UI/API using one of the following options, as the `everest` Service is not exposed with an external IP by default:
-
-    <Tabs>
-    <TabItem value="load-balancer" label="Load Balancer">
-
-    1. Use the following command to change the Everest service type to `LoadBalancer`:
-
-        ```sh
-        helm install everest openeverest/openeverest \
-        --set service.type=LoadBalancer
-        ```
-
-        <details>
-        <summary>When TLS is enabled</summary>
-
-        ```sh
-        NAME      TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)          AGE
-        everest   LoadBalancer   10.43.172.194   34.175.201.246       443:8080/TCP    10s
-        ```
-
-        </details>
-
-    2. Retrieve the external IP address for the `everest` service. This is the address where you can then launch OpenEverest at the end of the installation procedure. In this example, the external IP address used is `http://34.175.201.246`.
-
-        ```sh
-        kubectl get svc/everest -n everest-system
-        ```
-
-    </TabItem>
-    <TabItem value="ingress" label="Ingress">
-
-    To access OpenEverest, open your browser and go to: `https://everest.example.com`.
-
-    :::note
-
-    Replace `everest.example.com` with your own domain.
-
-    :::
-
-    </TabItem>
-    <TabItem value="node-port" label="Node Port">
-
-    1. Run the following command to change the Everest service type to `NodePort`:
-
-        ```sh
-        kubectl patch svc/everest -n everest-system -p '{"spec": {"type": "NodePort"}}'
-        ```
-
-    2. The following command displays the port assigned by Kubernetes to the everest service, which is `32349` in this case.
-
-        ```sh
-        kubectl get svc/everest -n everest-system
-        NAME      TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-        everest   NodePort   10.43.139.191   <none>        8080:32349/TCP   28m
-        ```
-
-        <details>
-        <summary>When TLS is enabled</summary>
-
-        ```sh
-        kubectl get svc/everest -n everest-system
-        NAME      TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-        everest   NodePort   10.43.139.191   <none>        443:32349/TCP   28m
-        ```
-
-        </details>
-
-    3. Retrieve the external IP addresses for the kubernetes cluster nodes.
-
-        <details>
-        <summary>Expected output</summary>
-
-        ```text
-        NAME                                          STATUS   ROLES    AGE   VERSION               INTERNAL-IP     EXTERNAL-IP      OS-IMAGE                             KERNEL-VERSION CONTAINER-RUNTIME
-        gke-everest-test-default-pool-8bbed860-65gx   Ready    <none>   3m35s v1.30.3-gke.1969001   10.204.15.199   34.175.155.135   Container-Optimized OS from Google   6.1.100+       containerd://1.7.19
-        gke-everest-test-default-pool-8bbed860-pqzb   Ready    <none>   3m35s v1.30.3-gke.1969001   10.204.15.200   34.175.120.50    Container-Optimized OS from Google   6.1.100+       containerd://1.7.19
-        gke-everest-test-default-pool-8bbed860-s0hg   Ready    <none>   3m35s v1.30.3-gke.1969001   10.204.15.201   34.175.201.246   Container-Optimized OS from Google   6.1.100+       containerd://1.7.19
-        ```
-
-        </details>
-
-    4. To launch the OpenEverest UI and create your first database cluster, go to the IP address/port found in steps 2 and 3. In this example, the external IP address used is `http://34.175.155.135:32349`. Nevertheless, you have the option to use any node IP specified in the above steps.
-
-    </TabItem>
-    <TabItem value="port-forwarding" label="Port forwarding">
-
-    The `kubectl port-forward` command in Kubernetes is used to create a temporary connection between your local machine and a specific Kubernetes resource (e.g., a Pod, Service, or Deployment) by forwarding traffic from a local port to a port on the resource. 
-
-    1. Run the following command to setup a port-forward to the OpenEverest server service:
-
-        ```sh
-        kubectl port-forward svc/everest 8080:8080 -n everest-system
-        ``` 
-
-        OpenEverest will be available at `http://127.0.0.1:8080`. This method is mostly useful for testing purposes. 
-
-        <details>
-        <summary>When TLS is enabled</summary>
-
-        ```sh
-        kubectl port-forward svc/everest 8443:443 -n everest-system
-        ```
-
-        OpenEverest will be available at `https://127.0.0.1:8443`.
-
-        </details>
-
-    </TabItem>
-    </Tabs>
+```text
+NAME        PROVIDER                      VERSION   PHASE          READY   REASON         AGE
+orders-db   provider-percona-postgresql   18.4-1    Initializing   False   Initializing   5s
+```
 
 ## Next steps
 
-<span className="oe-button">[Provision a database →](use/db_provision.md)</span>
+- [Connect to the instance](use/connect.md).
+- [Set up backup storage and schedule backups](backups_and_restore/AboutBackups.md).
+- [Add users and configure access control](administer/rbac.md).
 
-\{/* 
-Monitor the database with PMM →(.md-button)
-*/\}
+<span className="oe-button">[Create an instance with custom options →](use/create_instance.md)</span>

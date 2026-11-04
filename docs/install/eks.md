@@ -18,7 +18,7 @@ Before creating an EKS cluster, ensure the following tools are set up:
 
 :::warning
 
-To run a 3-node PXC cluster, you need at least a 3-node EKS cluster with 2 vCPUs available per node. The database will not be created if you attempt to create a database cluster in a Kubernetes cluster without sufficient resources.
+To run a three-member database instance, you need at least a three-node EKS cluster with 2 vCPUs available per node, because providers place each member on its own node. An instance can't start in a cluster without sufficient resources.
 
 :::
 
@@ -47,7 +47,7 @@ To create the EKS cluster, do the following steps:
     Example:
 
     ```bash
-    eksctl create cluster --name my-cluster --region region-code --version 1.28 --vpc-private-subnets subnet-ExampleID1,subnet-ExampleID2 --without-nodegroup
+    eksctl create cluster --name my-cluster --region region-code --version 1.33 --vpc-private-subnets subnet-ExampleID1,subnet-ExampleID2 --without-nodegroup
     ```
 
     *  **name**: The name of your cluster.

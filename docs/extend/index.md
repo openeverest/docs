@@ -1,14 +1,14 @@
 # Extend OpenEverest
 
-OpenEverest v2 is built on a modular, extensible architecture. Rather than baking every database technology and feature directly into the core, v2 provides two complementary extension primitives that let developers, operators, and the community bring new capabilities to the platform — without forking or modifying the core.
+OpenEverest v2 is built on a modular, extensible architecture. Rather than baking every database technology and feature directly into the core, v2 provides complementary extension types that let developers, operators, and the community bring new capabilities to the platform — without forking or modifying the core.
 
 This shift was a deliberate design goal: integrate a new database technology in days, not months.
 
-## The two extension primitives
+## Extension types
 
 ### Providers
 
-A **Provider** is a self-contained plugin that teaches OpenEverest how to manage a specific databas or storage technology. It encapsulates the reconciliation logic for an operator, defines the available components and deployment topologies, and ships the UI schema that generates the create/edit forms in the OpenEverest interface.
+A **Provider** is a self-contained plugin that teaches OpenEverest how to manage a specific technology. It encapsulates the reconciliation logic for an operator, defines the available components and deployment topologies, and ships the UI schema that generates the create/edit forms in the OpenEverest interface.
 
 Providers are installed independently of the OpenEverest core and can be upgraded on their own release cycle.
 
@@ -22,15 +22,21 @@ Generic Plugins cover use cases like SQL query browsers, AI data copilots, exter
 
 → [Learn about Generic Plugins](generic-plugins.md)
 
-### Extension Hub
+### Monitoring extensions
 
-The **Extension Hub** is the central catalog for discovering and installing both Providers and Generic Plugins. It combines a community-maintained registry with an in-product browser that shows which extensions are available and which are already installed on your cluster.
+A **monitoring extension** connects instances to one monitoring technology, such as PMM or Prometheus. It installs a `MonitoringClass` and the controller that serves it. The core installs no monitoring backend of its own.
 
-→ [Learn about the Extension Hub](hub.md)
+→ [Learn about monitoring extensions](monitoring-extensions.md)
+
+### Plugin Hub
+
+The **Plugin Hub** is the central catalog for discovering and installing Providers and Generic Plugins. It combines a community-maintained registry with an in-product browser that shows which extensions are available and which are already installed on your cluster.
+
+→ [Learn about the Plugin Hub](hub.md)
 
 ## Architecture overview
 
-The diagram below shows how the two primitives relate to the OpenEverest core:
+The diagram below shows how providers and generic plugins relate to the OpenEverest core:
 
 ```mermaid
 graph TB

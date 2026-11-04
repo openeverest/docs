@@ -1,59 +1,32 @@
 # API rate limiting
 
-API rate limiting is a crucial aspect of managing APIs effectively. It involves setting a threshold for the number of requests that an API can receive within a specific period. This enables you to regulate the number of incoming requests, mitigating the risk of server overload or abuse. 
+OpenEverest limits the number of requests its API accepts, to protect the server from overload and to slow down password guessing.
 
-## Sessions rate limit
+| Limit | Default | How to change |
+| --- | --- | --- |
+| API requests per second, for the whole server | 100 | Helm value `server.apiRequestsRateLimit` |
+| Login requests (password grant) per second, per client IP address | 5 | Environment variable `LOGIN_RATE_LIMIT` |
 
-The Everest API has a critical endpoint known as the `/session` endpoint, which is responsible for exchanging the user's login credentials (username and password) for a JSON web token (JWT). As this endpoint is used to authenticate users, it is important to implement additional security measures.
+When a limit is reached, the API responds with `429 Too Many Requests`. Repeated failed logins from the same IP address are slowed down further, with increasing delays.
 
-By default, a OpenEverest installation allows three requests per second to this endpoint. It’s configurable via the `CREATE_SESSION_RATE_LIMIT` environment variable.
+## Change the limits
 
-Everest monitors failed login attempts per IP address and applies progressive timeouts to prevent unlimited login attempts without being throttled. When a rate limit is reached, the OpenEverest API will throw an error.
+Large installations with many instances and users may need a higher API limit. Set it with Helm:
 
-  
-## Customize API rate limiting
+```sh
+helm upgrade everest-core openeverest/openeverest \
+  --namespace everest-system \
+  --reuse-values \
+  --set server.apiRequestsRateLimit=200
+```
 
-The default rate limit for OpenEverest is 100 requests per second. However, you have the option to modify these limits. To customize API rate limiting, you can adjust the rate limits to align them with your usage patterns and requirements.
+To change the login limit, add an environment variable to the server in your Helm values:
 
-For example, when dealing with large systems that have many database clusters, the default limit of 100 may not be sufficient, and therefore, you might want to increase the limit.
+```yaml
+server:
+  env:
+    - name: LOGIN_RATE_LIMIT
+      value: "3"
+```
 
-Customizing API rate limiting is crucial for the following reasons:
-
-- Attackers can launch brute force attacks on Auth Bearer Tokens by submitting a high volume of automated requests if rate limiting is not applied. Successful brute force attacks may compromise user credentials or sensitive information associated with the Auth Bearer Tokens.
-
-- The influx of excessive requests can overload the application server, using up bandwidth and storage.
-
-To customize the API rate limiting:
-
-1. Run the following command:
-
-    ```
-    kubectl -n everest-system patch deployment everest-server --type strategic -p 'spec:
-      strategy:
-        rollingUpdate:
-          maxSurge: 0
-          maxUnavailable: 1
-        type: RollingUpdate
-      template:
-        spec:
-          affinity:
-            podAntiAffinity: {}
-          containers:
-            - name: everest
-    kubectl -n everest-system patch deployment everest-server --type strategic -p 'spec:
-     strategy:
-       rollingUpdate:
-         maxSurge: 0
-              env:
-                - name: API_REQUESTS_RATE_LIMIT
-                  value: "200" 
-                - name: CREATE_SESSION_RATE_LIMIT
-                  value: "3"' 
-
-   Replace 200 with the desired value.
-
-2. After executing the previous command, the `everest-server` pod will restart automatically. If you had port-forwarding running, it would exit, and you'll need to rerun it.
-
-      ```
-      kubectl port-forward svc/everest 8080:8080 -n everest-system
-      ```
+The server restarts to apply the change. If you use `kubectl port-forward`, start it again afterwards.

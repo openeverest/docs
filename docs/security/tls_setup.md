@@ -1,10 +1,10 @@
-# TLS support for OpenEverest
+# TLS
 
-OpenEverest can be configured to use Transport Layer Security (TLS) for all incoming connections to the Everest API server. TLS ensures that communication between clients and the API server is encrypted, protecting data from interception or tampering. Administrators can configure server certificates and private keys to enable **secure HTTPS access**, enhancing the overall security posture for production environments.
+OpenEverest can use Transport Layer Security (TLS) for all incoming connections to its UI and API. TLS ensures that communication between clients and the API server is encrypted, protecting data from interception or tampering. Administrators can configure server certificates and private keys to enable **secure HTTPS access**, enhancing the overall security posture for production environments.
 
 :::note
 
-- When TLS is enabled, the default server port (8080) will only accept `https` traffic, and `http` traffic will be rejected.
+- When TLS is enabled, the `everest` service listens on port 443 and accepts only `https` traffic; `http` traffic is rejected.
 - We do not support redirects from `http` to `https`.
 - Self-signed certificates aren't trusted by most browsers, so it's best to use a trusted certificate from a Certificate Authority (CA) in production.
 
@@ -14,7 +14,7 @@ OpenEverest can be configured to use Transport Layer Security (TLS) for all inco
 
 :::info[Important]
 
-This section provides an example using **Helm**. You can also use the provided options with `everestctl` by using the flag `--helm.set`.
+The examples below use Helm. To enable TLS on an existing installation, use the same values with `helm upgrade everest-core openeverest/openeverest --namespace everest-system --reuse-values`.
 
 :::
 
@@ -50,7 +50,7 @@ Here are the steps to set up the OpenEverest server using cert-manager:
 2. Install OpenEverest using the above values:
 
     ```sh
-    helm install everest-core openeverest/openeverest --create-namespace \
+    helm install everest-core openeverest/openeverest --devel --create-namespace \
     -n everest-system \
     -f values.yaml
     ```
@@ -63,7 +63,7 @@ Here are the steps to set up the OpenEverest server using cert-manager:
 Use self-signed certificates (automatically generated during installation):
 
 ```sh
-helm install everest-core openeverest/openeverest --create-namespace \
+helm install everest-core openeverest/openeverest --devel --create-namespace \
 -n everest-system \
 --set server.tls.enabled=true
 ```
@@ -91,7 +91,7 @@ Here are the steps to set up the OpenEverest server using custom certificates:
 3. Install OpenEverest using the above values:
 
     ```sh
-    helm install everest-core openeverest/openeverest --create-namespace \
+    helm install everest-core openeverest/openeverest --devel --create-namespace \
     -n everest-system \
     -f values.yaml
     ```

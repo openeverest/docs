@@ -43,23 +43,18 @@ kubectl logs -f deploy/everest-server -n everest-system
 
 All communication with OpenEverest resources begins with the API.
 
-The API (`everest-server`) updates OpenEverest resources, while the `everest-controller` reconciles them and hands off to the provider's database operator.
+The API (`everest-server`) creates and updates OpenEverest resources. Providers reconcile `Instance` resources and hand them to their Operator; `everest-controller` handles backups, restores, monitoring bindings and plugins.
 
 ## Recommended troubleshooting flow
 
-When debugging, start with the API (`everest-server`), proceed to the `everest-controller`, and then examine the provider's database operator.
+When debugging, start with the API (`everest-server`), continue with the provider of the instance, and then examine the provider's Operator. For backups, restores and monitoring, also check `everest-controller`.
 
-## Does OpenEverest deploy PMM servers?
+## Does OpenEverest install a monitoring system?
 
-No. OpenEverest does not deploy PMM (Percona Monitoring and Management). PMM v3 is still supported as an external monitoring target, but only by some providers — monitoring support is provider-dependent. When a provider supports it, OpenEverest configures the database's monitoring agents to send metrics to your existing PMM server.
+No. OpenEverest installs no monitoring system, agents or metrics stack — not PMM, not Prometheus and not VictoriaMetrics. It connects instances to the monitoring system you already run:
 
-- A `MonitoringConfig` holds the details required to connect to the PMM server, such as its URL and API key.
-- Point the database at that configuration to start sending metrics.
+1. You install a **monitoring extension** for your monitoring system. It provides a `MonitoringClass`, for example `pmm` or `prometheus`.
+2. You create a `MonitoringDestination` that points at your server.
+3. You list the destination in the instance's `spec.monitoring.destinations`.
 
-For cluster-level Kubernetes metrics, OpenEverest also ships a VictoriaMetrics-based stack in the `everest-monitoring` namespace.
-
-:::note
-
-PMM is an external service; you must run your own PMM server for the providers that support it.
-
-:::
+Whether an instance can send to a given monitoring system depends on its provider. See [Monitoring](../use/monitoring.md).

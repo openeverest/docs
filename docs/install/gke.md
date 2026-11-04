@@ -47,7 +47,7 @@ step).
 The following command will create a cluster named `my-cluster-name`:
 
 ```bash
-$ gcloud container clusters create my-cluster-name --project <project ID> --zone us-central1-a --cluster-version 1.27 --machine-type n1-standard-4 --num-nodes=3
+$ gcloud container clusters create my-cluster-name --project <project ID> --zone us-central1-a --cluster-version 1.33 --machine-type n1-standard-4 --num-nodes=3
 ```
 
 :::note

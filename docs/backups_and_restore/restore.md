@@ -1,46 +1,75 @@
-# Restore the database from a previously saved backup
+# Restore a backup
 
-Database backups and data replication are complementary components of an effective disaster recovery strategy.
-
-Everest enables you to use backups to either create a new database or restore the backup data to the original database. Choosing between these two options often depends on the specific scenario, the urgency of recovery, the impact on ongoing operations, the need for data isolation, and the purpose of the restoration (such as testing, recovery from corruption, or analysis).
-
-## Restore database from backup
-
-Restoring to the same cluster is useful in the following scenarios:
-
-- **For faster recovery**: It's typically quicker to restore data to an existing database as it eliminates the need for creating a new database deployment.
-- **Database consistency:** Maintains the same database ID, configurations, and dependencies, ensuring consistency within the existing environment.
-
-To restore a database from a backup:
-
-1. In the 🗄️ **Databases** view, select the database you want to restore.
-2. Click the ⋯ Actions menu next to the backup you want to restore from, then click **Restore from a backup**.
-3. In the **Restore database** pop-up, select  **From a backup**.
-
-    ![!image](../images/restore_from_backup.png)
-
-4. Click **Restore**.
-
-### Post-Restore step for MongoDB
-
-PITR restores alter the timeline of MongoDB oplog events. As a result, MongoDB oplog slices created after the restore timestamp and before the last backup become invalid.
-
-To seamlessly resume PITR after a restore, make sure to run a new full backup. This new backup will serve as the starting point for oplog updates, ensuring the continuity and integrity of your data.
-
-## Restore to a point-in-time recovery
+Restoring replaces the data of an existing instance with the data from a backup or from a point in time. To keep the current instance untouched, [create a new instance from the backup](create_from_backup.md) instead.
 
 :::warning
 
-For PostgreSQL, point-in-time recovery (PITR) can get stuck in a **Restoring** state when you attempt to recover the database after the last transaction. See the [Limitation for PostgreSQL](createBackups/EnablePITR.md#limitation) section for a workaround.
+A restore overwrites all current data of the instance, and the instance is unavailable while the restore runs.
 
 :::
 
-To restore to a point-in-time recovery:
+## Restore from a backup
 
-1. In the 🗄️ **Databases** view, select the database you want to replicate.
-2. Click the ⋯ Actions menu next to the backup you want to replicate from, then click **Restore from a backup**. The **Restore database** dialogue box opens.
-3. In the **Restore database** pop-up, select **From a Point-in-time (PITR)**. Click on the calendar icon, choose the specific time to which you would like to restore the database.
+1. On the **Instances** page, open the **Actions** menu of the instance and select **Restore from a backup**. The action is available when the instance has at least one successful backup.
+2. Select **From a backup** and choose the backup.
+3. Confirm.
 
-    ![!image](../images/restore_pitr.png)
+The instance switches to **Restoring** and returns to **Ready** when the restore is complete. The **Restores** tab of the instance shows the progress and the history of restores.
 
-4. Click **Restore**.
+## Restore to a point in time
+
+You need [point-in-time recovery](pitr.md) enabled on the instance.
+
+1. Open **Actions** > **Restore from a backup**.
+2. Select **From a Point-in-time (PITR)**.
+3. Select the storage that holds the log and the date and time to restore to. The time must be inside the recovery window shown in the dialog.
+4. Confirm.
+
+## Restore with kubectl
+
+Create a `Restore` that names the target instance and the data source.
+
+From a backup:
+
+```yaml
+apiVersion: backup.openeverest.io/v1alpha1
+kind: Restore
+metadata:
+  name: orders-db-restore-1
+  namespace: demo
+spec:
+  instanceRef:
+    name: orders-db
+  dataSource:
+    type: Backup
+    backup:
+      backupRef:
+        name: orders-db-before-migration
+```
+
+To a point in time:
+
+```yaml
+apiVersion: backup.openeverest.io/v1alpha1
+kind: Restore
+metadata:
+  name: orders-db-restore-2
+  namespace: demo
+spec:
+  instanceRef:
+    name: orders-db
+  dataSource:
+    type: PointInTime
+    pointInTime:
+      source:
+        storageRef:
+          name: s3-backups
+      recoveryTarget: date        # or "latest"
+      date: "2026-11-04T10:00:00Z"
+```
+
+Follow the progress:
+
+```sh
+kubectl get restores -n demo
+```

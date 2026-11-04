@@ -1,133 +1,77 @@
-# Upgrade OpenEverest using Helm
+# Upgrade OpenEverest
 
-OpenEverest consistently delivers updates that includes bug fixes, security enhancements, and various improvements designed to optimize the overall performance of your database.
+The OpenEverest core and each provider are separate Helm releases with their own versions. You upgrade them separately: first the core, then the providers.
+
+:::warning[Developer Preview]
+
+Upgrades between OpenEverest 2 Developer Preview releases are **not supported**. The `Instance` and `Provider` APIs change between previews without a migration path, so install each preview on a fresh cluster. Upgrading from OpenEverest 1.x to 2 is not supported either; a migration path is planned for the General Availability release.
+
+The procedure below describes how upgrades work, for patch releases and for future releases.
+
+:::
 
 ## Before you upgrade
 
-:::info[Important]
-
-- Upgrade one minor release at a time to avoid unexpected issues. Start by updating to the latest patch release before moving on to the next minor release.
-- For a safe upgrade, we perform a pre-upgrade hook that runs a series of checks. You can disable this by setting `upgrade.preflightChecks=false`, but doing so means a safe upgrade cannot be assured.
-
-:::
-
-### Prepare for upgrading to version 1.7.0
-
-**Before you upgrade** to OpenEverest version 1.7.0, run the following command:
-
-```sh
-kubectl label namespaces everest-system app.kubernetes.io/managed-by-
-```
-
-## Migrate from the Percona Helm repository
-
-If you originally installed OpenEverest using the `percona` Helm repository, you need to perform a one-time migration to switch your existing releases to the new `openeverest` repository. This does not reinstall OpenEverest — it simply re-associates your existing Helm releases with the new chart source while preserving all your current configuration.
-
-To migrate, run the following commands:
-
-1. Add the new OpenEverest Helm repository:
+- Read the [release notes](../release-notes/release_notes_index.md) of the target version, especially the breaking changes.
+- Check which providers support the target version. The Plugin Hub and the provider release notes show the compatible core versions.
+- Back up your instances. See [Create backups](../backups_and_restore/create_backups.md).
+- Check your current releases:
 
     ```sh
-    helm repo add openeverest https://openeverest.github.io/helm-charts/
+    helm list -n everest-system
     ```
 
-2. Update your local Helm repository cache:
+## 1. Upgrade the custom resource definitions
 
-    ```sh
-    helm repo update
-    ```
-
-3. Upgrade each release to use the chart from the new repository.
-
-    Upgrade the core components release:
-
-    ```sh
-    helm upgrade everest-core openeverest/openeverest \
-      --namespace everest-system \
-      --reuse-values
-    ```
-
-    If you have one or more database namespace releases, upgrade each one:
-
-    ```sh
-    helm upgrade <RELEASE_NAME> openeverest/everest-db-namespace \
-      --namespace <DB_NAMESPACE> \
-      --reuse-values
-    ```
-
-    Replace `<RELEASE_NAME>` and `<DB_NAMESPACE>` with your actual release name and namespace. To list all your current releases, run `helm list --all-namespaces`.
-
-4. (Optional) Remove the old Percona Helm repository once all releases have been migrated:
-
-    ```sh
-    helm repo remove percona
-    ```
-
-## Upgrade CRDs
-
-In Helm v3, CRDs are not updated automatically during a Helm upgrade. You need to upgrade the CRDs manually.
-
-To update the CRDs, run the following command:
+Helm does not upgrade CRDs during `helm upgrade`, and the OpenEverest chart refuses to upgrade until the CRDs match the target version. Upgrade them first with the `everest-crds` chart:
 
 ```sh
 helm repo update
-helm upgrade --install everest-crds \
-    openeverest/everest-crds \
-    --namespace everest-system \
-    --take-ownership
+helm upgrade --install everest-crds openeverest/everest-crds \
+  --namespace everest-system \
+  --version <version> \
+  --take-ownership
 ```
 
-### Upgrading with Helm versions prior to 3.17.0
-    
-If you upgrade from **OpenEverest 1.8.0** and use a Helm version **older than 3.17.0**, the `--take-ownership` flag will not be available. Without this flag, you may encounter the following validation errors related to missing ownership metadata:
+`--take-ownership` requires Helm 3.17 or later. It lets the `everest-crds` release adopt CRDs that were installed by the `openeverest` chart.
 
-```
-invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm";
-annotation validation error: missing key "meta.helm.sh/release-name": must be set to "everest-crds";
-annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "everest-system"
-```
+## 2. Upgrade the core
 
-#### Workaround for Helm versions older than 3.17.0
-
-If you **must** use a Helm version **older than 3.17.0**, you can manually simulate the behavior of ``--take-ownership`` by adding the required labels and annotations to the Everest CRDs:
-
-```
-CRDS=(databaseclusters.everest.percona.com              databaseengines.everest.percona.com databaseclusterbackups.everest.percona.com databaseclusterrestores.everest.percona.com backupstorages.everest.percona.com monitoringconfigs.everest.percona.com)
-kubectl label crds "${CRDS[@]}" app.kubernetes.io/managed-by=Helm --overwrite
-kubectl annotate crds "${CRDS[@]}" meta.helm.sh/release-name=everest-crds
-kubectl annotate crds "${CRDS[@]}" meta.helm.sh/release-namespace=everest-system
+```sh
+helm upgrade everest-core openeverest/openeverest \
+  --namespace everest-system \
+  --version <version> \
+  --reuse-values
 ```
 
-This ensures the CRDs are correctly recognized as managed by Helm, avoiding validation issues during the upgrade.
+:::tip
 
-## Upgrade Helm releases
-
-:::warning
-
-When using `helm upgrade`, specifying `--set` (or other equivalent flags) causes Helm to revert all other values to the defaults defined in the chart. To avoid this issue, either include the `--reuse-values` flag or provide the complete set of values, including those used during the installation.
+Without `--reuse-values`, Helm resets every value you don't pass on the command line to the chart default. Either use `--reuse-values` or pass your complete values file with `-f`.
 
 :::
 
-To upgrade OpenEverest using Helm, run the following commands:
+The chart runs pre-upgrade checks. To skip them, set `upgrade.preflightChecks=false` and `upgrade.crdChecks=false` — only do this if you know why a check fails.
 
-1. Upgrade the Helm release for Everest (core components).
+## 3. Upgrade the providers
 
-    ```sh
-    helm upgrade everest-core openeverest/openeverest --namespace everest-system --version "$VERSION"       
-    ```
+Upgrade each provider to a version that supports the new core:
 
-    where,
+```sh
+helm upgrade provider-percona-postgresql \
+  oci://ghcr.io/openeverest/charts/provider-percona-postgresql \
+  --namespace everest-system \
+  --version <provider-version> \
+  --reuse-values
+```
 
-    **VERSION** is the OpenEverest version you wish to upgrade to.
+A provider upgrade can change the components of running instances, for example new default images. Changes that would restart or disrupt an instance are applied according to the instance's maintenance settings.
 
-2. Upgrade the Helm release for the database namespace (if applicable):
+## 4. Check the result
 
-    ```sh
-    helm upgrade everest openeverest/everest-db-namespace --namespace <DB namespace> --version "$VERSION"
-    ```
+```sh
+kubectl get pods -n everest-system
+kubectl get providers
+kubectl get instances -A
+```
 
-    where,
-
-    **VERSION** is the OpenEverest version you wish to upgrade to.
-
-    **DB namespace** is the namespace you wish to upgrade.
+Log in to the UI and check that your instances are **Ready**.

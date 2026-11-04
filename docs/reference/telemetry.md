@@ -1,55 +1,38 @@
-# Telemetry on OpenEverest
+# Telemetry
 
-In creating OpenEverest, we leveraged our years of experience in open-source database development, and collaborated closely with the Percona community through interviews to ensure our new product will meet your needs.
+OpenEverest sends anonymous usage data to help the project understand how it is used and decide what to build next. Participation is optional, and you can turn it off at any time. Read the Linux Foundation [privacy policy](https://lfprojects.org/policies/privacy-policy/) to learn more.
 
-Product telemetry fills-in the gaps in our understanding of how you are actually using Everest, to help us build the best-in-class cloud-native database platform for the open-source community.
+## What is collected
 
-Participation in this **anonymous** program is optional, and you can opt-out if you prefer not to share any information. Read The Linux Foundation [privacy policy](https://lfprojects.org/policies/privacy-policy/) to learn more.
+Periodically, the OpenEverest server sends a report with:
 
-## What information is collected
+- a random identifier of the installation;
+- the OpenEverest version;
+- the number of database deployments per technology.
 
-Currently, OpenEverest only collects information about the database technology used (MySQL, Mongo, PostgreSQL). Future releases will cover additional metrics.
+No names, addresses, credentials, configuration or data are collected, and the reports can't be traced back to a person or organization.
 
-Rest assured, access to the raw data is rigorously controlled, and individual user identification within the dataset is impossible. The data is thoroughly anonymized and cannot be traced back to any specific user.
+## Turn telemetry off
 
-## Disable telemetry
-
-Starting with OpenEverest 0.4.1, telemetry is enabled by default. If you don't want to send usage data to Percona, you can set the **DISABLE_TELEMETRY** environment variable to **TRUE**:
-
-To disable telemetry run:
+Telemetry is on by default. To turn it off, set the Helm value `telemetry` to `false` when you install OpenEverest:
 
 ```sh
-kubectl -n everest-system patch deployment everest-server --type strategic -p 'spec:
-  strategy:
-    rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 1
-    type: RollingUpdate
-  template:
-    spec:
-      containers:
-        - name: everest
-          env:
-          - name: DISABLE_TELEMETRY
-            value: "true"'
+helm install everest-core openeverest/openeverest \
+  --devel \
+  --namespace everest-system \
+  --create-namespace \
+  --set telemetry=false
 ```
 
-## Enable telemetry
-
-If you want to enable telemetry again:
+Or on an existing installation:
 
 ```sh
-kubectl -n everest-system patch deployment everest-server --type strategic -p 'spec:
-  strategy:
-    rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 1
-    type: RollingUpdate
-  template:
-    spec:
-      containers:
-        - name: everest
-          env:
-          - name: DISABLE_TELEMETRY
-            value: "false"'
+helm upgrade everest-core openeverest/openeverest \
+  --namespace everest-system \
+  --reuse-values \
+  --set telemetry=false
 ```
+
+This sets the `DISABLE_TELEMETRY` environment variable of the server. Providers may install Operators that have their own telemetry settings — check the provider's README.
+
+To turn telemetry back on, set `telemetry=true`.

@@ -1,101 +1,47 @@
-# Namespaces management
+# Namespaces
 
-The management of namespaces plays a vital role in efficiently organizing and allocating resources within OpenEverest.
+Instances, backup storages, monitoring destinations and instance presets are created in Kubernetes namespaces. Namespaces are the main boundary for organizing instances and for controlling access to them.
 
-## Add new namespaces
+## Which namespaces OpenEverest uses
 
-You can run the following command for provisioning a new DB namespace:
+OpenEverest can use every namespace in the cluster except system namespaces: `kube-system`, `kube-public`, `kube-node-lease`, its own system namespace (`everest-system`) and the system namespaces of managed Kubernetes services such as GKE.
 
-```sh
-everestctl namespaces add [NAMESPACE]
-```
+There is nothing to install in a namespace before you use it. Providers run in `everest-system` and manage instances in any namespace.
 
-The command supports the following flags:
-
-`--operator.mongodb=<bool>`
-
-`--operator.postgresql=<bool>`
-
-`--operator.xtradb-cluster=<bool>`
-
-`--take-ownership` - Allows OpenEverest to manage an existing Kubernetes namespace by adding the necessary labels. Without this flag, OpenEverest will attempt to create the namespace and throw an error if it already exists. Use this flag to take over an existing namespace.
-
-<details>
-<summary>Example</summary>
+To add a namespace, create it with `kubectl`:
 
 ```sh
-everestctl namespaces add development --operator.postgresql=false
-✓ Installing namespace 'development'
-```
-In the above command, we did not specify the MongoDB and MySQL operators.       Therefore, by default, OpenEverest assumes these operators are true and will add them.
-
-```sh
-everestctl namespaces add production
-
-? Which operators do you want to install? MongoDB    
-✓ Installing namespace 'production'
+kubectl create namespace team-a
 ```
 
-</details>
+It appears in OpenEverest right away — in **Settings** > **Namespaces** and in the **Namespace** list of the creation form.
+
+To remove a namespace, delete its instances first, then delete the namespace with `kubectl`. Deleting a namespace deletes everything in it, including the data of its instances.
 
 :::note
 
-The `everestctl install` command allows you create database namespaces during the initial installation. However, it cannot be rerun to add more database namespaces. To create additional database namespaces after installation, use the namespaces add command.
-
-- To provision a DB namespace after installation, use the command `everestctl namespaces add`. 
-
-- You may choose to skip the DB namespace installation in the `everestctl install` command.
+In OpenEverest 1.x, namespaces had to be added with `everestctl namespaces add`, which installed the database operators into each namespace. OpenEverest 2 does not need this: don't use `everestctl namespaces` with OpenEverest 2.
 
 :::
 
-## Update namespaces
+## Settings > Namespaces
 
-:::info[Important]
+**Settings** > **Namespaces** lists the namespaces you have access to. Click a namespace to see its details.
 
-Removing operators with `update` is currently not supported.
+## Control access to namespaces
 
-:::
+When [RBAC](rbac.md) is enabled, each user sees only the namespaces they have `read` access to on the `namespaces` resource, and can work only with the objects in those namespaces they are granted. For example, to give a team its own namespace:
 
-You can run the following command to add more operators to an existing DB namespace.
-
-```sh
-everestctl namespaces update [NAMESPACE] 
+```text
+p, role:team-a, namespaces, read, main/team-a
+p, role:team-a, instances, *, main/team-a/*
+g, team-a-developers, role:team-a
 ```
 
-<details>
-<summary>Example</summary>
+## Organize namespaces
 
-```sh
-everestctl namespaces update development
+Common ways to use namespaces:
 
-? Which operators do you want to install? MongoDB
-✓ Updating namespace 'development'
-```
-
-</details>
-
-## Delete namespaces
-
-You can run the following command for deleting namespaces:
-
-```sh
-everestctl namespaces remove [NAMESPACE]
-```
-
-- This command deletes only the specified namespace, as long as it is managed by OpenEverest.
-
-- Setting `--keep-namespace` deletes all resources within the namespace (e.g., operators, DatabaseClusters, BackupStorages) while preserving the namespace itself. Use this option to clean up the namespace without removing it.
-
-<details>
-<summary>Example</summary>
-
-```sh
-everestctl namespaces remove development
-
-✓ Deleting database clusters in namespace 'development'
-✓ Deleting backup storages in namespace 'development'
-✓ Deleting monitoring instances in namespace 'development'
-✓ Deleting namespace 'development'
-```
-
-</details>
+- **One namespace per team**, so teams manage their own instances and can't see each other's.
+- **One namespace per environment**, such as `dev`, `staging` and `prod`, each with its own backup storages, monitoring destinations and [presets](instance_presets.md).
+- **Quotas and limits.** Standard Kubernetes [ResourceQuotas](https://kubernetes.io/docs/concepts/policy/resource-quotas/) and [LimitRanges](https://kubernetes.io/docs/concepts/policy/limit-ranges/) apply to instances, so you can cap the CPU, memory and storage a team can use.

@@ -1,4 +1,4 @@
-# SSO: OpenEverest IdP integration
+# Single sign-on (OIDC)
 
 [Identity Provider (IdP)](https://www.okta.com/identity-101/why-your-company-needs-an-identity-provider/) integration connects applications and services with an external identity provider for your organization. This enables centralized authentication and authorization management, improving security and simplifying user access. By leveraging IdP integration, you can ensure that users are securely authenticated and authorized to access various applications and services across your organization.
 
@@ -6,7 +6,7 @@ OpenEverest uses [OpenID Connect](https://auth0.com/docs/authenticate/protocols/
 
 :::note[Note]
 
-To integrate IdP with OpenEverest, first, [install OpenEverest](../install/installEverest.md) and then [configure OIDC](#configure-oidc-on-the-provider-side) on the IdP's side as well as the [OpenEverest side](#configure-oidc-on-openeverest-side).
+To integrate an IdP with OpenEverest, [configure OIDC on the IdP's side](#configure-oidc-on-the-provider-side), then [configure OpenEverest](#configure-openeverest).
 
 :::
 
@@ -79,89 +79,66 @@ Other popular IdPs include Microsoft Azure Active Directory, Auth0, Google Ident
 
 </details>
 
-## Configure OIDC on the OpenEverest's side
+## Configure OpenEverest
 
-You can configure OIDC on the OpenEverest's side using `everestctl` in headless mode or with the wizard.
+OpenEverest needs the **issuer URL** of your IdP and the **client ID** of the application you created. Optionally, set the **scopes** to request; the default is `openid`, `profile` and `email`.
 
-:::note[Note]
+The configuration is stored in the `everest-settings` ConfigMap in the `everest-system` namespace. Use one of the following methods.
 
-You must have obtained the `Issuer URL` and `Client ID` values from the [Configure OIDC on the provider side](#example-oidc-configuration-on-the-provider-side) section.
+### At installation, with Helm
 
-:::
-
-To configure OIDC using the headless mode, run the following command:
-
-```
-everestctl settings oidc configure --issuer-url=http://url.com --client-id=<your-app-client-id
-```
-
-<details>
-<summary>Output</summary>
-
-```text
-2024-06-18T11:06:18Z    info    oidc/configure.go:110   OIDC provider configured, restarting Everest..
-2024-06-18T11:06:33Z    info    oidc/configure.go:117   OIDC has been configured successfully
+```sh
+helm install everest-core openeverest/openeverest \
+  --devel \
+  --namespace everest-system \
+  --create-namespace \
+  --set server.oidc.issuerUrl=https://example.okta.com \
+  --set server.oidc.clientId=<client-id>
 ```
 
-</details>
+Helm writes `everest-settings` only on installation. To change the configuration later, use one of the other methods.
 
-To configure OIDC using the wizard, run the following command:
+### After installation, with kubectl
 
-```
-$ everestctl settings oidc configure
-```
-
-<details>
-<summary>Output</summary>
-
-```text
-? Enter issuer URL <your-provider-url>
-? Enter client ID <your-app-client-id>
-2024-06-18T11:05:15Z    info    oidc/configure.go:110   OIDC provider   configured, restarting Everest..    
-2024-06-18T11:05:30Z    info    oidc/configure.go:117   OIDC has been configured successfully
-```
-
-</details>
-
-<details>
-<summary>What's happening under the hood?</summary>
-
-This command stores the updated configuration in k8s and restarts the Everest deployment.
-
-1. **Store Configuration**
-
-    The OIDC settings are stored in the `everest-settings` ConfigMap in the `everest-system` namespace, along with other settings, in the following format:
+1. Edit the ConfigMap:
 
     ```sh
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-        name: everest-settings
-        namespace: everest-system
-    data:
-        data:
-        oidc.config: |
-            issuerUrl: <your OIDC provider URL>
-            clientId: <your OIDC provider client ID>
+    kubectl edit configmap everest-settings -n everest-system
     ```
 
-    The Everest user should not directly interact with the `everest-settings` ConfigMap. Use the `everestctl` command to set up the OIDC config.
+    ```yaml
+    data:
+      oidc.config: |
+        issuerUrl: https://example.okta.com
+        clientId: <client-id>
+        scopes:
+          - openid
+          - profile
+          - email
+    ```
 
-2. **Restart OpenEverest**
+2. Restart the server to apply the change:
 
-    OIDC configuration must be in place for OpenEverest to start the API Server, allowing the server to utilize the OIDC provider's validation. This means that after setting up the OIDC configuration, the OpenEverest API Server needs to be restarted.
+    ```sh
+    kubectl rollout restart deployment/everest-server -n everest-system
+    ```
 
-    The `everestctl` command typically takes approximately 15 seconds to execute. It waits for the Everest Deployment to be up again before exiting successfully.
+### After installation, with everestctl
 
-    :::info[Important]
+```sh
+everestctl settings oidc configure \
+  --issuer-url=https://example.okta.com \
+  --client-id=<client-id>
+```
 
-    - The restart only impacts the Everest UI and API. Database clusters are not affected.
+The command updates `everest-settings` and restarts the server for you. See [Users](../administer/manage_users.md#manage-built-in-users-with-everestctl) for how to get `everestctl` for OpenEverest 2.
 
-    - The restart results in the loss of the port-forwarding connection. If you had port-forwarding enabled on your machine to access OpenEverest UI and API, you will need to set it up again.
+:::note
 
-    :::
+- Restarting the server affects only the OpenEverest UI and API. Instances keep running.
+- The restart breaks existing `kubectl port-forward` sessions. Start them again.
 
-</details>
+:::
 
 ## Testing IdP integration
 
@@ -171,7 +148,7 @@ After setting up your OIDC configuration, you can verify the functionality by vi
 
 ## OpenEverest OIDC configuration for Microsoft Entra
 
-When configuring Everest's OIDC settings via `everestctl`, ensure you specify the correct scope:
+For Microsoft Entra, request the application's own scope so that the access token has the right audience:
 
 ```sh
 everestctl settings oidc configure \

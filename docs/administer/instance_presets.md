@@ -1,14 +1,14 @@
-# Instance presets in OpenEverest
+# Instance presets
 
 :::info[Availability]
 
-Instance presets are available in OpenEverest 2.0.0 Developer Preview 3 and later. This is **phase 1**: one-click deployment from a preset. Editing a preset before deploying, and managing presets from the UI, arrive in a later release.
+Instance presets are available in OpenEverest 2.0.0 Developer Preview 3 and later. In the current release, users can deploy from a preset in one click. Editing a preset before deploying, and managing presets from the UI, arrive in a later release.
 
 :::
 
 ## Introduction
 
-An **InstancePreset** is a reusable, ready-to-deploy configuration for an OpenEverest Instance. It captures a complete instance shape — provider, version, topology, component sizing, storage and scheduling — as a single Kubernetes object that users pick from a list instead of filling in every field by hand.
+An **instance preset** is a reusable, ready-to-deploy configuration for an OpenEverest Instance. It captures a complete instance shape — provider, version, topology, component sizing, storage and scheduling — as a single Kubernetes object that users pick from a list instead of filling in every field by hand.
 
 Presets turn instance creation into naming the instance and pressing **Create**.
 
@@ -22,27 +22,29 @@ Presets solve this by providing:
 2. **Consistency.** Everyone deploying from the same preset gets the same shape, which removes drift between environments and between team members.
 3. **A safe default surface.** Administrators and provider authors encode good defaults once; users select rather than assemble. Power users still get the full parameter surface when they need it.
 
+## Two kinds of presets
+
+| Kind | Scope | Can reference namespaced objects | Typical author |
+| --- | --- | --- | --- |
+| `ClusterInstancePreset` | Cluster | No | Providers and platform administrators |
+| `InstancePreset` | Namespace | Yes, in its own namespace | Teams that own a namespace |
+
+- A **`ClusterInstancePreset`** can create instances in any namespace. Because it does not know the target namespace, it must not reference namespaced objects such as Secrets. Leave those references empty — see [Namespaced references](#namespaced-references). Cluster-scoped values, such as a StorageClass, can be set directly.
+- An **`InstancePreset`** lives in a namespace and can only create instances there. It may reference Secrets and other objects in that namespace by name, so it can capture a complete, known-good configuration.
+
+The `spec` of both kinds has the same structure as `Instance.spec`, so a preset can be applied to create an instance verbatim.
+
 ## How presets reach a cluster
 
-Presets can be installed in a cluster in two ways, and both produce the same cluster-scoped `InstancePreset` resource:
+1. **Shipped with a provider.** A provider's Helm chart can bundle `ClusterInstancePreset`s, so installing the provider also installs ready-made configurations for it. This is the common path.
+2. **Authored directly.** An administrator or a team creates a preset with `kubectl` to capture an organization-specific configuration.
 
-1. **Shipped with a provider.** A provider's Helm chart can bundle presets, so installing the provider also installs a set of ready-made configurations for it. This is the common path — users get sensible presets the moment a provider is available.
-2. **Authored directly.** An administrator can create an `InstancePreset` custom resource by hand (or with `kubectl`) to capture an organization-specific configuration.
+List the presets:
 
-:::info[Presets are cluster-scoped]
-
-`InstancePreset` is a cluster-scoped resource — it is not tied to a namespace, so a single preset can be used to create instances in any namespace. Namespace-specific values (such as monitoring configs and secrets) are left empty in the preset and resolved per namespace at creation time (see [Namespace default resolution](#namespace-default-resolution)).
-
-:::
-
-## The `InstancePreset` resource
-
-An `InstancePreset` mirrors the `Instance` spec: its `spec` is an `InstancePresetSpec`, which is the same structure as `Instance.spec`. This is why a preset can be applied to create an instance verbatim.
-
-Because a preset is cluster-scoped, it must not reference namespace-scoped objects directly. The rule of thumb is:
-
-- **Cluster-scoped values** (such as `storageClass`) **can** be set directly in the preset.
-- **Namespace-scoped references** (such as secret and config map names) **must** be left empty and are resolved from annotated defaults in the target namespace when the preset is used.
+```sh
+kubectl get clusterinstancepresets
+kubectl get instancepresets -A
+```
 
 ### Creating a preset as a CR
 
@@ -50,7 +52,7 @@ Apply an `InstancePreset` like any other Kubernetes resource:
 
 ```yaml
 apiVersion: core.openeverest.io/v1alpha1
-kind: InstancePreset
+kind: ClusterInstancePreset
 metadata:
   name: mongodb-production
 spec:
@@ -76,11 +78,11 @@ spec:
 kubectl apply -f mongodb-production-preset.yaml
 ```
 
-The preset is now available cluster-wide and appears in the creation wizard for the `percona-server-mongodb` provider.
+The preset is now available in every namespace and appears in the creation wizard for the `percona-server-mongodb` provider.
 
 ### Shipping presets with a provider
 
-Provider authors bundle presets in the provider's Helm chart. Presets are declared in the chart's `values.yaml` under the `presets:` key, and each entry is rendered into an `InstancePreset` resource when the chart is installed.
+Provider authors bundle presets in the provider's Helm chart. Presets are declared in the chart's `values.yaml` under the `presets:` key, and each entry is rendered into a `ClusterInstancePreset` resource when the chart is installed.
 
 ```yaml
 # charts/<provider-name>/values.yaml
@@ -120,27 +122,14 @@ See the [Provider Development Guide](https://github.com/openeverest/provider-sdk
 
 :::
 
-### Namespace default resolution
+### Namespaced references
 
-A preset leaves namespace-scoped references empty because it is cluster-scoped and does not know which namespace an instance will land in. When a preset is used to create an instance in a specific namespace, OpenEverest fills those empty references from resources in that namespace that are annotated as defaults.
+A `ClusterInstancePreset` can't know the namespace an instance will be created in, so it must not name namespaced objects such as Secrets or monitoring destinations. If instances need them, either:
 
-- **Namespace-scoped resources** (Secret, ConfigMap, MonitoringConfig) use the annotation `openeverest.io/is-default-components-<component-name>: "true"`.
-- **Cluster-scoped resources** (StorageClass) use the standard Kubernetes annotation `storageclass.kubernetes.io/is-default-class: "true"`.
+- use an `InstancePreset` in the target namespace, which can name them directly; or
+- leave them out of the `ClusterInstancePreset` and add them to the instance after it is created.
 
-For example, to mark a secret as the default for the `engine` component in the `prod` namespace:
-
-```bash
-kubectl annotate Secret db-credentials \
-  openeverest.io/is-default-components-engine="true" \
-  --namespace prod \
-  --overwrite
-```
-
-Resolution behavior:
-
-- Defaults for namespace-scoped resources are resolved per namespace; defaults for cluster-scoped resources are resolved cluster-wide.
-- If several resources carry the default annotation, the most recently created one is used.
-- If no default is found, the field stays empty and validation may fail when the field is required.
+Automatic resolution of namespaced defaults for cluster-wide presets is planned.
 
 ## Using presets in the UI
 
@@ -153,8 +142,8 @@ From the UI, users can only select an existing preset and create an instance fro
 In the instance creation wizard, presets are the starting point:
 
 1. Open the creation wizard and choose a provider. The wizard shows a **preset picker** filtered to that provider.
-2. Select a preset. OpenEverest resolves it for the target namespace — filling in namespace defaults and the cluster's default `StorageClass` — and populates the form. The topology is locked and the deeper configuration steps are disabled, since the preset already defines them.
-3. Name the instance and press **Create**. The resolved configuration is submitted as-is, with an `openeverest.io/instance-preset` annotation recording which preset it came from.
+2. Select a preset. OpenEverest fills the form with the preset's configuration. The topology is locked and the deeper configuration steps are disabled, since the preset already defines them.
+3. Name the instance and press **Create**. The resolved configuration is submitted as-is, with an annotation recording which preset it came from: `openeverest.io/instance-preset` for an `InstancePreset`, `openeverest.io/cluster-instance-preset` for a `ClusterInstancePreset`.
 
 The following demo shows the full flow of creating an instance from a preset:
 
@@ -164,9 +153,13 @@ The following demo shows the full flow of creating an instance from a preset:
   <a href="../images/presets-demo.mp4">download the video</a> instead.
 </video>
 
+## Restrict users to presets
+
+With [RBAC](rbac.md), you can let users create instances only from presets: grant them `create` on `instances` but not `deploy`. They can then deploy any preset they can read, but not change its settings.
+
 ## Limitations
 
-Presets in this release are phase 1 and have the following limitations:
+Presets in this release have the following limitations:
 
 - Presets cannot be created from the UI. Users can only pick an existing preset and deploy from it; presets are authored as CRs or shipped with providers.
 - Presets can be applied but not edited before deploying from the UI — the resolved configuration is submitted verbatim.
