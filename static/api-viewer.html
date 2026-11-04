@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>OpenEverest API reference</title>
+    <!-- Embedded by /docs/api/ in an iframe, so Stoplight's global CSS stays out of the docs theme. -->
+    <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements@9.0.29/styles.min.css" />
+    <script src="https://unpkg.com/@stoplight/elements@9.0.29/web-components.min.js"></script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      elements-api {
+        display: block;
+        height: 100%;
+      }
+      .error {
+        padding: 1.5rem;
+        font-family: system-ui, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <elements-api id="api" router="hash" layout="sidebar"></elements-api>
+    <script>
+      // Only specs from the openeverest repository are rendered.
+      const SPEC_PREFIX = 'https://raw.githubusercontent.com/openeverest/openeverest/';
+      const spec = new URLSearchParams(window.location.search).get('spec') || '';
+      if (spec.startsWith(SPEC_PREFIX) && !spec.includes('..')) {
+        customElements.whenDefined('elements-api').then(() => {
+          document.getElementById('api').apiDescriptionUrl = spec;
+        });
+      } else {
+        document.body.innerHTML = '<p class="error">Unknown API specification.</p>';
+      }
+    </script>
+  </body>
+</html>

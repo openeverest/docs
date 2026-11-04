@@ -4,6 +4,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import type {Options as DocsOptions} from '@docusaurus/plugin-content-docs';
+import apiReferencePlugin from './plugins/api-reference';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -163,6 +164,7 @@ const config: Config = {
         },
       },
     ],
+    apiReferencePlugin,
   ],
 
   themeConfig: {
@@ -191,6 +193,7 @@ const config: Config = {
           position: 'left',
           label: 'Documentation',
         },
+        {to: '/api/', label: 'API', position: 'left', activeBaseRegex: '/api/'},
         {
           type: 'docsVersionDropdown',
           position: 'right',
@@ -222,6 +225,7 @@ const config: Config = {
           items: [
             {label: 'Quickstart guide', to: `/${lastVersionPath}/quick-install`},
             {label: 'Release notes', to: `/${lastVersionPath}/release-notes/release_notes_index`},
+            {label: 'API reference', to: '/api/'},
             {label: 'All versions', to: '/versions'},
           ],
         },

@@ -1,0 +1,69 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: var(--ifm-font-weight-semibold);
+}
+
+.picker select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  font: inherit;
+  font-weight: normal;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.tab,
+.tabActive {
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--ifm-global-radius);
+  color: var(--ifm-font-color-base);
+}
+
+.tab:hover {
+  background: var(--ifm-color-emphasis-200);
+  text-decoration: none;
+}
+
+.tabActive {
+  background: var(--ifm-color-primary);
+  color: var(--ifm-color-white);
+}
+
+.tabActive:hover {
+  color: var(--ifm-color-white);
+  text-decoration: none;
+}
+
+.source {
+  margin-left: auto;
+}
+
+.viewer {
+  display: block;
+  width: 100%;
+  height: calc(100vh - var(--ifm-navbar-height) - 4.5rem);
+  min-height: 30rem;
+  border: 0;
+}

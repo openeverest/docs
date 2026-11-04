@@ -58,4 +58,4 @@ The API limits the number of requests per second. See [API rate limiting](use/AP
 
 ## Reference
 
-The full API specification is published as an OpenAPI document in the [openeverest repository](https://github.com/openeverest/openeverest/blob/main/api/openapi/http-api.yaml).
+The [API reference](/api/next/) documents every endpoint and the [custom resources](/api/next/crds/), and lets you pick the OpenEverest version. The OpenAPI document is also in the [openeverest repository](https://github.com/openeverest/openeverest/blob/main/api/openapi/http-api.yaml).
