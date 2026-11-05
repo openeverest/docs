@@ -43,7 +43,7 @@ All resources are at version `v1alpha1`. During the Developer Preview, their sch
 
 ## Explore the schemas
 
-Every resource has an OpenAPI schema. Use `kubectl explain` to read the documentation of any field:
+The [custom resources reference](/api/next/crds/) lists every field of every resource. In a cluster, use `kubectl explain` to read the documentation of any field:
 
 ```sh
 kubectl explain instance.spec
