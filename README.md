@@ -74,7 +74,17 @@ The newest stable version is served at `/docs/current/`.
 ## Releasing docs
 
 The deploy workflow ([.github/workflows/deploy.yml](.github/workflows/deploy.yml))
-runs on every push to `main` and on every `v*` tag.
+runs on every push to `main` and on every `v*` tag. It always builds the whole
+site from `main` and assembles every published version from the tags, so any
+run publishes all versions.
+
+> [!NOTE]
+> GitHub starts no workflow when more than three tags are pushed at once. After
+> pushing several tags together, run the workflow by hand:
+> `gh workflow run deploy.yml --ref main`.
+>
+> The `github-pages` environment allows deployments from `main` and from `v*`
+> tags (**Settings → Environments → github-pages**).
 
 **A release from `main` (2.x):**
 
