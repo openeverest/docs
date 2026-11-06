@@ -74,7 +74,6 @@ Plugins are distributed as Helm charts. Find them in the [Plugin Hub](hub.md), w
 ```bash
 helm install <plugin-name> \
   oci://<registry>/<chart> \
-  --version <version> \
   --namespace everest-system
 ```
 

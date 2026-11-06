@@ -1,6 +1,9 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Quickstart
 
-This guide installs OpenEverest on an existing Kubernetes cluster, adds a provider, and creates your first instance. It takes about ten minutes.
+This guide creates a local Kubernetes cluster, installs OpenEverest and a provider, and creates your first instance. It takes about fifteen minutes.
 
 :::warning[Developer Preview]
 
@@ -12,17 +15,51 @@ OpenEverest 2 is a Developer Preview and is not intended for production. Install
 
 You need:
 
-- A Kubernetes cluster, version 1.32 or later, with a default StorageClass. A local cluster such as [k3d](https://k3d.io/) or [kind](https://kind.sigs.k8s.io/) is fine for trying OpenEverest out. See [Prerequisites](install/prerequisites.md) for details.
-- [`kubectl`](https://kubernetes.io/docs/tasks/tools/) configured to access the cluster.
+- [Docker](https://docs.docker.com/get-docker/) with at least 8 GB of memory available, and [k3d](https://k3d.io/#installation) 5 or later. To use a cluster you already have instead, see [Prerequisites](install/prerequisites.md).
+- [`kubectl`](https://kubernetes.io/docs/tasks/tools/).
 - [Helm](https://helm.sh/docs/intro/install/) 3.
 
-Check that you can reach the cluster:
+## 1. Create a cluster
+
+<Tabs>
+<TabItem value="k3d" label="Local cluster (k3d)">
+
+Create a cluster with three nodes, so that instances with three members can spread across them:
+
+```sh
+k3d cluster create openeverest \
+  --agents 2 \
+  --image rancher/k3s:v1.37.1-k3s1
+```
+
+k3d points `kubectl` at the new cluster. Check that the nodes are ready:
 
 ```sh
 kubectl get nodes
 ```
 
-## 1. Install OpenEverest
+```text
+NAME                       STATUS   ROLES           AGE   VERSION
+k3d-openeverest-agent-0    Ready    <none>          10s   v1.37.1+k3s1
+k3d-openeverest-agent-1    Ready    <none>          9s    v1.37.1+k3s1
+k3d-openeverest-server-0   Ready    control-plane   13s   v1.37.1+k3s1
+```
+
+</TabItem>
+<TabItem value="existing" label="Existing cluster">
+
+Any cluster with Kubernetes 1.32 or later and a default StorageClass works, in any cloud or on-premises. See [Prerequisites](install/prerequisites.md) for what it needs.
+
+Check that `kubectl` points at it:
+
+```sh
+kubectl get nodes
+```
+
+</TabItem>
+</Tabs>
+
+## 2. Install OpenEverest
 
 Add the OpenEverest Helm repository and install the core into the `everest-system` namespace:
 
@@ -35,7 +72,7 @@ helm install everest-core openeverest/openeverest \
   --create-namespace
 ```
 
-`--devel` lets Helm pick pre-release versions such as `2.0.0-dev.4`. To pin a version, add `--version <version>`.
+`--devel` installs the newest OpenEverest 2 preview; without it, Helm picks the newest stable release, which is OpenEverest 1.x.
 
 Wait until the pods are running:
 
@@ -44,13 +81,13 @@ kubectl get pods -n everest-system
 ```
 
 ```text
-NAME                                  READY   STATUS    RESTARTS   AGE
-everest-controller-5b8dbbc98-l6vg2    1/1     Running   0          40s
-everest-plugin-hub-86cd7d55f4-p8vc9   1/1     Running   0          40s
-everest-server-5ffd9fb66f-v4w5l       1/1     Running   0          40s
+NAME                                      READY   STATUS    RESTARTS   AGE
+everest-controller-5474b99686-mw5c9       1/1     Running   0          40s
+everest-core-plugin-hub-566d44f99-k7554   1/1     Running   0          40s
+everest-server-7b6db64b79-728z8           1/1     Running   0          40s
 ```
 
-## 2. Add a provider
+## 3. Add a provider
 
 The core does not run any technology by itself. Install at least one [provider](extend/providers.md) into the same namespace. This guide uses the PostgreSQL provider:
 
@@ -71,9 +108,15 @@ NAME                          AGE
 provider-percona-postgresql   90s
 ```
 
-To use other technologies, find their providers in the **Plugin Hub** inside OpenEverest. You can install as many as you need. See [Add providers](install/install_providers.md).
+:::note[Provider versions]
 
-## 3. Log in
+Providers are released separately from OpenEverest, and each provider release is built for a specific OpenEverest version. Helm installs the newest provider release. If the provider does not start, it may need a newer OpenEverest than the one installed — see [Match the provider and core versions](install/install_providers.md#install-a-provider).
+
+:::
+
+To use other technologies, find their providers in the **Plugin Hub** inside OpenEverest. See [Add providers](install/install_providers.md).
+
+## 4. Log in
 
 1. Get the password of the `admin` user:
 
@@ -82,7 +125,7 @@ To use other technologies, find their providers in the **Plugin Hub** inside Ope
       -o jsonpath='{.data.users\.yaml}' | base64 --decode | yq '.admin.passwordHash'
     ```
 
-    To choose the password yourself, add `--set server.initialAdminPassword=<password>` to the `helm install` command in step 1. Either way, [change it](administer/manage_users.md) after you log in.
+    To choose the password yourself, add `--set server.initialAdminPassword=<password>` to the `helm install` command in step 2. Either way, [change it](administer/manage_users.md) after you log in.
 
 2. Forward the OpenEverest service to your machine:
 
@@ -94,7 +137,7 @@ To use other technologies, find their providers in the **Plugin Hub** inside Ope
 
 To expose OpenEverest permanently with a load balancer or an Ingress, see [Install OpenEverest](install/install_everest_helm_charts.md#expose-openeverest).
 
-## 4. Create your first instance
+## 5. Create your first instance
 
 Instances live in namespaces of your choice. Create one for this guide:
 
@@ -112,16 +155,26 @@ kubectl create namespace demo
 
 3. Click **Create**.
 
-The instance appears in the list with the status **Initializing** and becomes **Ready** when all its components are running. You can follow the same progress with `kubectl`:
+The instance appears in the list with the status **Initializing** and becomes **Ready** when all its components are running — on a local cluster, after two to three minutes. You can follow the same progress with `kubectl`:
 
 ```sh
 kubectl get instances -n demo
 ```
 
 ```text
-NAME        PROVIDER                      VERSION   PHASE          READY   REASON         AGE
-orders-db   provider-percona-postgresql   18.4-1    Initializing   False   Initializing   5s
+NAME        PROVIDER                      VERSION   PHASE   AGE
+orders-db   provider-percona-postgresql   18.4-1    Ready   2m44s
 ```
+
+## Clean up
+
+To remove everything, delete the cluster:
+
+```sh
+k3d cluster delete openeverest
+```
+
+On an existing cluster, see [Uninstall](uninstall/uninstall_everest_helm.md).
 
 ## Next steps
 

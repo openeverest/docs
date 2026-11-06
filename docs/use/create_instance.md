@@ -49,7 +49,7 @@ Click **Create** on the last step to create the instance.
 
 ## Create an instance with kubectl
 
-An instance is an `Instance` custom resource, so you can also create it with `kubectl` or a GitOps tool. Only `providerRef` is required; the provider fills in its defaults for everything else.
+An instance is an `Instance` custom resource, so you can also create it with `kubectl` or a GitOps tool. Which fields are required depends on the provider — the PostgreSQL provider, for example, needs the `engine` and `proxy` components. Fields you leave out get the provider's defaults.
 
 ```yaml title="orders-db.yaml"
 apiVersion: core.openeverest.io/v1alpha1
@@ -67,13 +67,16 @@ spec:
       replicas: 3
       storage:
         size: 50Gi
+    proxy:
+      type: pgbouncer
+      replicas: 2
 ```
 
 ```sh
 kubectl apply -f orders-db.yaml
 ```
 
-To find the topologies, components and versions a provider supports, look at its `Provider` resource:
+If the provider rejects the instance, the reason is in the provider's logs and in the instance's status. To find the topologies, components and versions a provider supports, look at its `Provider` resource. Creating the instance once in the UI and copying its spec (`kubectl get instance <name> -o yaml`) is a quick way to get a valid starting point.
 
 ```sh
 kubectl get provider provider-percona-postgresql -o yaml

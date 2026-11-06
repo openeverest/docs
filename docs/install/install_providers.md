@@ -35,7 +35,7 @@ The provider appears in the UI immediately: on the **Instances** page, in the **
 
 :::warning[Match the provider and core versions]
 
-During the Developer Preview, the `Instance` and `Provider` APIs still change between releases. Use a provider version that supports your OpenEverest version — the Plugin Hub shows the compatible range for each provider, and each provider's release notes name the core version it was built against.
+During the Developer Preview, the `Instance` and `Provider` APIs still change between releases, and a provider built for a newer OpenEverest may not start on an older one. Helm installs the newest provider release. If it doesn't start — for example with an error about a missing kind — install a provider release built for your OpenEverest version with `--version`. The OpenEverest release notes and each provider's release notes name the versions that go together.
 
 :::
 

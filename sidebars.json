@@ -56,23 +56,6 @@
           "type": "doc",
           "id": "install/install_providers",
           "label": "Add providers"
-        },
-        {
-          "type": "category",
-          "label": "Create a Kubernetes cluster",
-          "collapsed": true,
-          "items": [
-            {
-              "type": "doc",
-              "id": "install/eks",
-              "label": "Amazon EKS"
-            },
-            {
-              "type": "doc",
-              "id": "install/gke",
-              "label": "Google GKE"
-            }
-          ]
         }
       ]
     },
