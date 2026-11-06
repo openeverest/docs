@@ -67,10 +67,12 @@ Add the OpenEverest Helm repository and install the core into the `everest-syste
 helm repo add openeverest https://openeverest.github.io/helm-charts/
 helm repo update
 helm install everest-core openeverest/openeverest \
-  --version 2.0.0-dev.4 \
+  --devel \
   --namespace everest-system \
   --create-namespace
 ```
+
+`--devel` installs the newest OpenEverest 2 preview; without it, Helm picks the newest stable release, which is OpenEverest 1.x.
 
 Wait until the pods are running:
 
@@ -92,7 +94,6 @@ The core does not run any technology by itself. Install at least one [provider](
 ```sh
 helm install provider-percona-postgresql \
   oci://ghcr.io/openeverest/charts/provider-percona-postgresql \
-  --version 0.5.1 \
   --namespace everest-system
 ```
 
@@ -109,7 +110,7 @@ provider-percona-postgresql   90s
 
 :::note[Provider versions]
 
-Providers are released separately from OpenEverest, and a provider is built for a specific OpenEverest version. The versions in this guide are tested together. Newer provider releases may need a newer OpenEverest; check the provider's release notes before you change the version.
+Providers are released separately from OpenEverest, and each provider release is built for a specific OpenEverest version. Helm installs the newest provider release. If the provider does not start, it may need a newer OpenEverest than the one installed — see [Match the provider and core versions](install/install_providers.md#install-a-provider).
 
 :::
 
