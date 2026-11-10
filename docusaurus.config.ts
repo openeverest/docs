@@ -167,6 +167,8 @@ const config: Config = {
     apiReferencePlugin,
   ],
 
+  clientModules: ['./src/scarf.ts'],
+
   themeConfig: {
     image: 'img/hero-image-2x1-ratio.png',
     colorMode: {
