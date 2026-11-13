@@ -175,7 +175,7 @@ After setting up your OIDC configuration, you can verify the functionality by vi
 
 ## Keep SSO users signed in
 
-An SSO session in OpenEverest lasts 15 minutes. When it expires, the OpenEverest UI renews it with your IdP in the background, without prompting the user. To do that, the UI needs a refresh token from the IdP. Without one, SSO users are signed out every 15 minutes, and the browser console shows a Content Security Policy error about framing your IdP, followed by `IFrame timed out without a response`.
+An SSO session in OpenEverest lasts 15 minutes. When it expires, the OpenEverest UI renews it with your IdP in the background, without prompting the user. To do that, the UI needs a refresh token from the IdP. Without one, SSO users are signed out every 15 minutes.
 
 To get a refresh token:
 
