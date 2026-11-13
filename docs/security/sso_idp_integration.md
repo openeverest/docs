@@ -25,6 +25,8 @@ To integrate IdP with OpenEverest, first, [install OpenEverest](../install/insta
 
         :::
 
+- **Refresh tokens**: Allow the refresh token grant for the application, so that OpenEverest can keep users signed in. See [Keep SSO users signed in](#keep-sso-users-signed-in).
+
 ### Example: OIDC configuration on the provider side
 
 Below is an example of the configuration for the IdP provider Okta. 
@@ -53,6 +55,8 @@ Other popular IdPs include Microsoft Azure Active Directory, Auth0, Google Ident
 
     c. Sign-out redirect URIs - `<EVEREST_URL>`
 
+    d. Grant type - select **Refresh Token** in addition to **Authorization Code**.
+
     :::note[Note]
 
     Okta allows the use of HTTP for development purposes and in cases where the Admin explicitly permits it.
@@ -61,13 +65,13 @@ Other popular IdPs include Microsoft Azure Active Directory, Auth0, Google Ident
 
     ![!image](../images/sso_aap_integration.png)
 
-    d. Click **Save**.
+    e. Click **Save**.
 
-    e. Copy the `clientID` of the created app.
+    f. Copy the `clientID` of the created app.
 
     ![!image](../images/okta_client-id.png)
 
-    f. Navigate to **Security → API → Authorization Servers** and copy the `issuerURL` you’d like to use for the Everest authorization. 
+    g. Navigate to **Security → API → Authorization Servers** and copy the `issuerURL` you’d like to use for the Everest authorization. 
 
     ![!image](../images/okta_url.png)
 
@@ -168,6 +172,27 @@ This command stores the updated configuration in k8s and restarts the Everest de
 After setting up your OIDC configuration, you can verify the functionality by visiting the OpenEverest login page and attempting to log in using Single Sign-On (SSO).
 
 ![!image](../images/sso_login.png)
+
+## Keep SSO users signed in
+
+An SSO session in OpenEverest lasts 15 minutes. When it expires, the OpenEverest UI renews it with your IdP in the background, without prompting the user. To do that, the UI needs a refresh token from the IdP. Without one, SSO users are signed out every 15 minutes, and the browser console shows a Content Security Policy error about framing your IdP, followed by `IFrame timed out without a response`.
+
+To get a refresh token:
+
+1. Allow the refresh token grant for the OpenEverest application in your IdP, for example **Refresh Token** in the grant types of the application in Okta or ZITADEL. Keycloak issues refresh tokens by default.
+
+2. Add the `offline_access` scope to the OIDC configuration of OpenEverest, together with the other scopes you need:
+
+    ```sh
+    everestctl settings oidc configure \
+    --issuer-url=<your-issuer-url> \
+    --client-id=<your-app-client-id> \
+    --scopes=openid,profile,email,offline_access
+    ```
+
+    Like any change to the OIDC configuration, this restarts OpenEverest. Users get a refresh token the next time they sign in.
+
+From OpenEverest 1.17.1, each renewal exchanges a new ID token, so the IdP must include an `id_token` in its refresh token response. Most IdPs do when the `openid` scope was granted.
 
 ## OpenEverest OIDC configuration for Microsoft Entra
 
