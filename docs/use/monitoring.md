@@ -114,6 +114,52 @@ Enabling or disabling monitoring may add or remove an agent or exporter containe
 
 To stop sending to a destination, remove its entry from the instance.
 
+## Expose metrics without a destination
+
+To collect an instance's metrics with a tool that OpenEverest does not configure — a Datadog agent, Grafana Alloy, a Prometheus you manage yourself — ask the provider to serve them without a destination:
+
+```yaml
+spec:
+  monitoring:
+    sources:
+      metrics:
+        policy: Always
+```
+
+With the default policy, `OnDemand`, the provider runs its metrics exporters only while a destination needs metrics. With `Always`, it runs them whether or not the instance has destinations. Components whose own process serves metrics, such as HAProxy, publish them under either policy. `kubectl get provider <name> -o jsonpath='{.spec.monitoring.componentTypes}'` shows which component types serve metrics natively (`Native`), through an exporter (`Exporter`), or not at all (`None`).
+
+Once the instance is ready, `status.monitoring.sources.metrics` lists every endpoint that is serving. Each entry gives the component, a pod selector, the port, path and scheme, and any TLS settings and credential profile needed to reach it. The Secret for each credential profile is listed under `status.monitoring.sources.credentials`.
+
+```sh
+kubectl get instance orders-db -n demo -o jsonpath='{.status.monitoring.sources.metrics}'
+```
+
+Point your scraper at those pods. For example, a Prometheus Operator `PodMonitor` for the engine of a Percona XtraDB Cluster instance:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: orders-db-engine
+  namespace: demo
+spec:
+  selector:
+    matchLabels:
+      core.openeverest.io/instance: orders-db
+      core.openeverest.io/component: engine
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+```
+
+Copy the selector, port and path from the instance's status, because they differ between providers and components. If the namespace has a default-deny `NetworkPolicy`, allow your scraper to reach the metrics port. The [monitoring-prometheus](https://github.com/openeverest/monitoring-prometheus) extension can create and maintain these `PodMonitor` resources for you through a destination instead.
+
+:::note
+
+Changing the policy adds or removes the exporter container, which restarts the instance's pods one at a time. Exporters can reveal database, collection and user names, so allow only trusted scrapers to reach them. If no component of the instance can serve metrics, the change is accepted with a warning and has no effect.
+
+:::
+
 ## Check the status
 
 The instance's `MonitoringConfigured` condition summarizes all its destinations, and `status.monitoring.destinations` shows each one:
