@@ -171,21 +171,20 @@ After setting up your OIDC configuration, you can verify the functionality by vi
 
 ## OpenEverest OIDC configuration for Microsoft Entra
 
-When configuring Everest's OIDC settings via `everestctl`, ensure you specify the correct scope:
+Use the v2.0 issuer URL of your tenant. OpenEverest compares the issuer of every ID token with it, so the multi-tenant endpoints (`common`, `organizations` and `consumers`) don't work.
 
 ```sh
 everestctl settings oidc configure \
---issuer-url=http://url.com \
---client-id=<your-app-client-id> \
---scopes=openid,profile,email,<your-app-client-id>/.default
+--issuer-url=https://login.microsoftonline.com/<tenant-id>/v2.0 \
+--client-id=<your-app-client-id>
 ```
 
 :::note
 
-Replace `<your-app-client-id>` with your actual Microsoft Entra application (client) ID, and ensure the issuer-url points to the correct tenant.
+Replace `<tenant-id>` with your directory (tenant) ID and `<your-app-client-id>` with your application (client) ID. The default scopes (`openid`, `profile` and `email`) are enough. If you added the `<your-app-client-id>/.default` scope for an earlier version of OpenEverest, you can drop it by running the command again without `--scopes`: OpenEverest no longer uses the access token.
 
 :::
 
-With this configuration, the access token will include `"aud": "<your-app-client-id>"`, and it will have a valid signature that OpenEverest can verify.
+To use group-based RBAC policies, add a groups claim to the app registration in **Token configuration** > **Add groups claim**. By default, Microsoft Entra lists groups by their object IDs, so use those IDs as group names in your RBAC policies.
 
-For a detailed explanation, see the [OIDC integration limitations with Microsoft Entra](../reference/known_limitations.md#oidc-integration-with-microsoft-entra).
+For the limitations, see [OIDC integration with Microsoft Entra](../reference/known_limitations.md#oidc-integration-with-microsoft-entra).
