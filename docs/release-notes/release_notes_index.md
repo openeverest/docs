@@ -1,5 +1,6 @@
 # OpenEverest release notes index
 
+- [OpenEverest 1.17.1 (2026-11-13)](OpenEverest-1.17.1-2026-11-13.md)
 - [OpenEverest 1.17.0 (2026-10-13)](OpenEverest-1.17.0-2026-10-13.md)
 - [OpenEverest 1.16.2 (2026-07-30)](OpenEverest-1.16.2-2026-07-30.md)
 - [OpenEverest 1.16.1 (2026-07-08)](OpenEverest-1.16.1-2026-07-08.md)

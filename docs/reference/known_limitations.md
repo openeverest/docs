@@ -269,6 +269,18 @@ You can follow these steps if your database cluster is stuck in the **Restoring*
 
 ## OIDC integration with Microsoft Entra
 
+This section applies to OpenEverest 1.17.1 and later. For earlier versions, see [OpenEverest 1.17.0 and earlier](#openeverest-1170-and-earlier).
+
+- **Single-tenant issuer URL only.** OpenEverest accepts an ID token only if its issuer matches the configured issuer URL. Use the v2.0 issuer URL of your tenant, `https://login.microsoftonline.com/<tenant-id>/v2.0`. The multi-tenant endpoints (`common`, `organizations` and `consumers`) are not supported.
+
+- **Users in more than 200 groups get no group-based permissions.** Above that limit, Microsoft Entra leaves out the `groups` claim of the ID token and adds a reference to Microsoft Graph instead (the groups overage claim). OpenEverest doesn't query Microsoft Graph, so these users get only the permissions granted to their subject. To stay under the limit, emit only the groups assigned to the application (**Token configuration** > **Add groups claim** > **Groups assigned to the application**).
+
+See [OpenEverest OIDC configuration for Microsoft Entra](../security/sso_idp_integration.md#openeverest-oidc-configuration-for-microsoft-entra) for the setup.
+
+### OpenEverest 1.17.0 and earlier
+
+OpenEverest 1.17.0 and earlier validate the access token instead of the ID token. Upgrade to 1.17.1 or later, which fixes the [GHSA-qv2p-mv35-wq3m](https://github.com/openeverest/openeverest/security/advisories/GHSA-qv2p-mv35-wq3m) security vulnerability. Until then, the following applies.
+
 When integrating Microsoft Entra ID as your OIDC provider for OpenEverest, it's essential to ensure that the access tokens issued are compatible with OpenEverest's token validation logic.
 
 **Problem**
