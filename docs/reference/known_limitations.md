@@ -269,8 +269,53 @@ You can follow these steps if your database cluster is stuck in the **Restoring*
 
 ## OIDC integration with Microsoft Entra
 
+This section applies to OpenEverest 1.17.1 and later. For earlier versions, see [OpenEverest 1.17.0 and earlier](#openeverest-1170-and-earlier).
+
 - **Single-tenant issuer URL only.** OpenEverest accepts an ID token only if its issuer matches the configured issuer URL. Use the v2.0 issuer URL of your tenant, `https://login.microsoftonline.com/<tenant-id>/v2.0`. The multi-tenant endpoints (`common`, `organizations` and `consumers`) are not supported.
 
 - **Users in more than 200 groups get no group-based permissions.** Above that limit, Microsoft Entra leaves out the `groups` claim of the ID token and adds a reference to Microsoft Graph instead (the groups overage claim). OpenEverest doesn't query Microsoft Graph, so these users get only the permissions granted to their subject. To stay under the limit, emit only the groups assigned to the application (**Token configuration** > **Add groups claim** > **Groups assigned to the application**).
 
 See [OpenEverest OIDC configuration for Microsoft Entra](../security/sso_idp_integration.md#openeverest-oidc-configuration-for-microsoft-entra) for the setup.
+
+### OpenEverest 1.17.0 and earlier
+
+OpenEverest 1.17.0 and earlier validate the access token instead of the ID token. Upgrade to 1.17.1 or later, which fixes the [GHSA-qv2p-mv35-wq3m](https://github.com/openeverest/openeverest/security/advisories/GHSA-qv2p-mv35-wq3m) security vulnerability. Until then, the following applies.
+
+When integrating Microsoft Entra ID as your OIDC provider for OpenEverest, it's essential to ensure that the access tokens issued are compatible with OpenEverest's token validation logic.
+
+**Problem**
+
+By default, Microsoft Entra issues access tokens intended for use with Microsoft's own APIs (e.g., Microsoft Graph). These tokens have the following characteristics:
+
+- **Audience (aud):** "`00000003-0000-0000-c000-000000000000`" (Microsoft Graph)
+
+- **Signature:** Uses a proprietary mechanism that cannot be validated by OpenEverest
+
+Microsoft Entra generates access tokens using a proprietary signature mechanism, which OpenEverest cannot validate. This results in signature verification failures when integrating OpenEverest with Entra-generated tokens.
+
+**Solution**
+
+To obtain access tokens that OpenEverest can validate, request tokens explicitly scoped for the registered application in Microsoft Entra using the `<application-client-id>/.default scope`. This ensures:
+
+- **Audience (aud):** Set to your application's client ID
+
+- **Signature:** Standard JWT, verifiable using the issuer's public keys
+
+**Everest Configuration**
+
+When configuring Everest's OIDC settings via `everestctl`, ensure you specify the correct scope:
+
+```sh
+everestctl settings oidc configure \
+--issuer-url=http://url.com \
+--client-id=<your-app-client-id> \
+--scopes=openid,profile,email,<your-app-client-id>/.default
+```
+
+:::note
+
+Note: Replace `<your-app-client-id>` with your actual Microsoft Entra application (client) ID, and ensure the issuer-url points to the correct tenant.
+
+:::
+
+With this configuration, the access token will include `"aud": "<your-app-client-id>"`, and it will have a valid signature that OpenEverest can verify.

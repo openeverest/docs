@@ -181,7 +181,7 @@ everestctl settings oidc configure \
 
 :::note
 
-Replace `<tenant-id>` with your directory (tenant) ID and `<your-app-client-id>` with your application (client) ID. The default scopes (`openid`, `profile` and `email`) are enough. If you added the `<your-app-client-id>/.default` scope for an earlier version of OpenEverest, you can drop it by running the command again without `--scopes`: OpenEverest no longer uses the access token.
+Replace `<tenant-id>` with your directory (tenant) ID and `<your-app-client-id>` with your application (client) ID. From OpenEverest 1.17.1, the default scopes (`openid`, `profile` and `email`) are enough. OpenEverest 1.17.0 and earlier also need the `<your-app-client-id>/.default` scope, see [OpenEverest 1.17.0 and earlier](../reference/known_limitations.md#openeverest-1170-and-earlier). After upgrading to 1.17.1, you can drop that scope by running the command again without `--scopes`.
 
 :::
 
