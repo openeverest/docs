@@ -3,7 +3,7 @@
 ## Any data technology, one platform
 
 - **Provider-based.** Each technology is added by installing a [Provider](extend/providers.md). Providers are released independently of the core, so a technology can gain features without an OpenEverest release.
-- **A growing catalog.** The [Plugin Hub](extend/hub.md) lists the available providers and plugins, with their maturity and install command.
+- **A growing catalog.** The [Plugin Hub](extend/hub.md) lists the available providers, generic plugins, and integrations, with their maturity and install command.
 - **Your Kubernetes, your data.** OpenEverest runs on any conformant Kubernetes cluster, in any cloud or on-premises. There is no vendor lock-in and no data leaves your infrastructure.
 
 ## Provisioning

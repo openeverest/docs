@@ -50,7 +50,7 @@ The core is installed with one Helm chart into the `everest-system` namespace:
 
 - **everest-server** serves the web UI and the [REST API](../API.md). It authenticates users, enforces [role-based access control](../administer/rbac.md), and reads and writes OpenEverest custom resources on the user's behalf.
 - **everest-controller** runs the technology-agnostic controllers: backup storages, backups, restores and backup imports, monitoring bindings, and plugin registration.
-- **Plugin Hub** is a generic plugin bundled with the chart. It shows the catalog of available providers and plugins inside the UI. See [Plugin Hub](../extend/hub.md).
+- **Plugin Hub** is a generic plugin bundled with the chart. It shows the catalog of available providers, generic plugins, and integrations inside the UI. See [Plugin Hub](../extend/hub.md).
 
 The UI is a shell. The creation and edit forms for each technology are generated from a schema that the provider ships, and plugins can add their own pages and tabs. When you install a new provider or plugin, its screens appear without any change to the core.
 

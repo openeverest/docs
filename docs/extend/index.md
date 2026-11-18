@@ -30,13 +30,13 @@ A **monitoring extension** connects instances to one monitoring technology, such
 
 ### Plugin Hub
 
-The **Plugin Hub** is the central catalog for discovering and installing Providers and Generic Plugins. It combines a community-maintained registry with an in-product browser that shows which extensions are available and which are already installed on your cluster.
+The **Plugin Hub** is the central catalog for discovering and installing Providers, Generic Plugins, and integrations. It combines a community-maintained registry with an in-product browser that shows which extensions are available and which are already installed on your cluster.
 
 → [Learn about the Plugin Hub](hub.md)
 
 ## Architecture overview
 
-The diagram below shows how providers and generic plugins relate to the OpenEverest core:
+The diagram below shows how extension types relate to the OpenEverest core:
 
 ```mermaid
 graph TB
@@ -54,6 +54,12 @@ graph TB
     GPB[Plugin Backend Pod]
   end
 
+  subgraph Monitoring Extensions
+    MC[MonitoringClass]
+    MEC[Class Controller]
+    MD[Monitoring system]
+  end
+
   subgraph Third-party
     OP[Database Operator]
     TR[Operator-managed resources]
@@ -64,6 +70,9 @@ graph TB
   P -->|creates & manages| TR
   OP -->|reconciles| TR
   API -->|Instance CRD| P
+  MEC -->|claims| MC
+  API -->|creates monitoring bindings| MEC
+  MEC -->|configures monitoring| MD
 ```
 
 ## Specifications and further reading

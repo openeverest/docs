@@ -1,6 +1,6 @@
 # Plugin Hub
 
-The Hub is the central catalog for discovering and installing OpenEverest extensions — both [Providers](providers.md) and [Generic Plugins](generic-plugins.md). It gives the community a single, curated place to publish extensions and gives operators a single place to find and install them.
+The Hub is the central catalog for discovering and installing OpenEverest extensions — [Providers](providers.md), [Generic Plugins](generic-plugins.md), and [integrations](monitoring-extensions.md). It gives the community a single, curated place to publish extensions and gives operators a single place to find and install them.
 
 The Hub has two parts:
 
@@ -11,16 +11,17 @@ The Hub has two parts:
 
 The catalog lives in the [`openeverest/hub`](https://github.com/openeverest/hub) repository. It follows a formula / pointer model: each entry is a small `formula.yaml` file that points at an OCI artifact (a Helm chart) hosted in the author's own registry. The catalog stores metadata and a pointer — not the extension code itself.
 
-Extensions are organized into two groups:
+Extensions are organized into three groups:
 
 - **Providers** — database, storage and AI operators that OpenEverest manages.
 - **Generic Plugins** — UI, CLI, and backend extensions of OpenEverest itself.
+- **Integrations** — connections to external systems. The first supported area is monitoring, including [monitoring extensions](monitoring-extensions.md) for PMM, Prometheus, Coroot, and VictoriaMetrics.
 
 ### How the index is generated
 
 Authors contribute an extension by opening a pull request against the repository (see [Publishing an extension](#publishing-an-extension)). Because the formula is a pointer rather than code, review focuses on metadata accuracy and naming, not on a code audit.
 
-When a pull request is merged into `main`, a GitHub Actions workflow regenerates an aggregated JSON manifest, `index/index.json`, and commits it back to the repository. This manifest contains the consolidated metadata for every plugin and provider in the catalog and is the single source of truth consumed by the Plugin Hub.
+When a pull request is merged into `main`, a GitHub Actions workflow regenerates an aggregated JSON manifest, `index/index.json`, and commits it back to the repository. This manifest contains the consolidated metadata for every extension in the catalog and is the single source of truth consumed by the Plugin Hub.
 
 The index is published directly from `main` and served over the GitHub raw CDN:
 
@@ -77,7 +78,7 @@ helm install plugin-hub \
   --namespace everest-system
 ```
 
-Providers and plugins install into the `everest-system` namespace. After installation, the extension appears as installed in the Plugin Hub, and Providers become available when creating a database.
+Extensions normally install into the `everest-system` namespace. After installation, the extension appears as installed in the Plugin Hub. Providers become available when creating an instance, while a monitoring extension registers one or more `MonitoringClass` resources that can be selected when configuring monitoring.
 
 ## Gated and vendor extensions
 
@@ -89,11 +90,11 @@ For example, a commercial provider might expose only a contact link and licensin
 
 ## Publishing an extension
 
-To add your own Provider or Generic Plugin to the catalog:
+To add your own Provider, Generic Plugin, or integration to the catalog:
 
 1. Publish your extension as a Helm chart to an OCI-compatible registry (GHCR, Docker Hub, Quay, and so on).
-2. Fork [`openeverest/hub`](https://github.com/openeverest/hub) and copy the `extensions/_template` directory into `extensions/providers/<slug>` or `extensions/plugins/<slug>`.
-3. Fill in `formula.yaml`, add a `README.md` and a logo, and open a pull request against `main`.
+2. Fork [`openeverest/hub`](https://github.com/openeverest/hub) and copy the `extensions/_template` directory into the matching `extensions/providers/<slug>`, `extensions/plugins/<slug>`, or `extensions/integrations/<slug>` directory.
+3. Fill in `formula.yaml`, add a `README.md` and a logo, and open a pull request against `main`. For an integration, set `metadata.type` to `integration` and declare its `spec.integration` area and capabilities. See [Publish a monitoring extension](monitoring-extensions.md#publish-to-the-hub).
 4. Automated validation checks the schema, naming, and required files. A maintainer reviews the metadata, and on merge the index is regenerated automatically.
 
 For the full field reference and step-by-step instructions, see the [publishing guide](https://github.com/openeverest/hub/blob/main/docs/PUBLISHING.md) in the catalog repository.
@@ -105,3 +106,4 @@ For the full field reference and step-by-step instructions, see the [publishing 
 - [Spec 007 — Extension Hub](https://github.com/openeverest/specs/blob/main/specs/007-extension-hub.md) — the full design.
 - [Providers](providers.md) — database and storage extensions.
 - [Generic Plugins](generic-plugins.md) — UI, CLI, and backend extensions.
+- [Monitoring extensions](monitoring-extensions.md) — integrations with external monitoring systems.

@@ -13,7 +13,8 @@ These docs describe OpenEverest 2, which is a **Developer Preview**: it is not f
 OpenEverest has a small, technology-agnostic core. Everything that is specific to a technology lives in a **Provider** that you install next to the core:
 
 - The **core** gives you the web UI, the REST API, authentication, role-based access control, backups and monitoring as common building blocks.
-- Each **Provider** teaches OpenEverest how to run one technology, usually by driving a Kubernetes Operator. The [Plugin Hub](extend/hub.md) lists the available providers, and anyone can build a new one.
+- Each **Provider** teaches OpenEverest how to run one technology, usually by driving a Kubernetes Operator.
+- **Monitoring integrations** connect instances to external systems such as PMM, Prometheus, Coroot and VictoriaMetrics. The [Plugin Hub](extend/hub.md) lists available providers and integrations.
 - **Generic plugins** add features that are not tied to one technology, such as metrics dashboards or benchmarking tools.
 
 You pick the providers you need. Every running deployment — whatever the technology — is an **Instance** that you create, scale, back up, restore and delete in the same way.
