@@ -69,7 +69,9 @@ g, admin, role:admin
 | `instances` | `<cluster>/<namespace>/<instance>` | Instances. |
 | `instance-presets` | `<cluster>/<namespace>/<preset>` | Namespaced instance presets. |
 | `cluster-instance-presets` | `<cluster>/<preset>` | Cluster-wide instance presets. |
+| `storage-classes` | `<cluster>/<class>` | Kubernetes storage classes (read-only). Users need `read` to choose a storage class for an instance. |
 | `backup-storages` | `<cluster>/<namespace>/<storage>` | Backup storages. |
+| `backup-storage-classes` | `<cluster>/<class>` | Object storage technologies a backup storage can use (read-only). Users need `read` on a class to create or update a backup storage of that class. |
 | `backup-classes` | `<cluster>/<class>` | Backup classes. Users need `read` to configure backups. |
 | `backups` | `<cluster>/<namespace>/<instance>` | Backups **of an instance** — the object is the instance, not the backup. |
 | `restores` | `<cluster>/<namespace>/<instance>` | Restores **into an instance** — the object is the instance. |
@@ -128,6 +130,7 @@ Alice can browse everything but can't change anything or see credentials.
 ```text
 p, role:team-a, namespaces, read, main/team-a
 p, role:team-a, providers, read, */*
+p, role:team-a, storage-classes, read, */*
 p, role:team-a, backup-classes, read, */*
 p, role:team-a, instances, *, main/team-a/*
 p, role:team-a, backups, *, main/team-a/*
