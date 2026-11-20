@@ -175,6 +175,11 @@
         },
         {
           "type": "doc",
+          "id": "administer/events",
+          "label": "Lifecycle events"
+        },
+        {
+          "type": "doc",
           "id": "use/API_rate_limit",
           "label": "API rate limiting"
         }
@@ -194,6 +199,11 @@
           "type": "doc",
           "id": "security/session_management",
           "label": "Sessions and tokens"
+        },
+        {
+          "type": "doc",
+          "id": "security/secrets",
+          "label": "Secrets and credentials"
         },
         {
           "type": "doc",
@@ -329,6 +339,11 @@
           "type": "doc",
           "id": "release-notes/release_notes_index",
           "label": "Release notes index"
+        },
+        {
+          "type": "doc",
+          "id": "release-notes/OpenEverest-2.0.0-alpha.1-2026-11-20",
+          "label": "2.0.0 Alpha 1"
         },
         {
           "type": "doc",
