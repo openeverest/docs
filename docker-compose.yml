@@ -18,6 +18,9 @@ services:
     volumes:
       - .:/app
       - docs_node_modules:/app/node_modules
+      # Docusaurus writes absolute paths into .docusaurus, so the container
+      # must not share it with a build on the host.
+      - docs_docusaurus:/app/.docusaurus
 
   # Full production build, as deployed to GitHub Pages (includes the
   # /docs/ -> /docs/current/ and /docs/<latest>/ -> /docs/current/ redirects).
@@ -32,6 +35,7 @@ services:
     volumes:
       - .:/app
       - docs_node_modules:/app/node_modules
+      - docs_docusaurus:/app/.docusaurus
 
   preview:
     profiles: [preview]
@@ -48,3 +52,4 @@ services:
 
 volumes:
   docs_node_modules:
+  docs_docusaurus:

@@ -14,6 +14,13 @@ import type {WrapperProps} from '@docusaurus/types';
 
 type Props = WrapperProps<typeof DocVersionBannerType>;
 
+function previewKind(version: string): string {
+  if (/-alpha/.test(version)) return 'an Alpha release';
+  if (/-beta/.test(version)) return 'a Beta release';
+  if (/-rc/.test(version)) return 'a release candidate';
+  return 'a Developer Preview release';
+}
+
 function PreviewVersionBanner({className}: Props): ReactNode {
   const {
     siteConfig: {title: siteTitle},
@@ -35,8 +42,8 @@ function PreviewVersionBanner({className}: Props): ReactNode {
       )}
       role="alert">
       <div>
-        This is documentation for {siteTitle} <b>{versionMetadata.label}</b>, a Developer Preview
-        release. It is not intended for production.
+        This is documentation for {siteTitle} <b>{versionMetadata.label}</b>,{' '}
+        {previewKind(versionMetadata.version)}. It is not intended for production.
       </div>
       {latestDoc && (
         <div className="margin-top--md">

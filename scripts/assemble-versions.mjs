@@ -41,10 +41,20 @@ function parse(tag) {
   return {tag, major: +m[1], minor: +m[2], patch: +m[3], pre: m[4] ?? null};
 }
 
+// Pre-release channels in release order. Plain SemVer would sort "alpha.1"
+// before "dev.4", and "alpha10" before "alpha2" when there is no dot.
+const CHANNELS = ['dev', 'alpha', 'beta', 'rc'];
+const CHANNEL_RE = /^([a-z]+)\.?(\d+)$/;
+
 function comparePre(a, b) {
   if (a === b) return 0;
   if (a === null) return 1;
   if (b === null) return -1;
+  const ca = CHANNEL_RE.exec(a);
+  const cb = CHANNEL_RE.exec(b);
+  if (ca && cb && CHANNELS.includes(ca[1]) && CHANNELS.includes(cb[1])) {
+    return CHANNELS.indexOf(ca[1]) - CHANNELS.indexOf(cb[1]) || +ca[2] - +cb[2];
+  }
   const pa = a.split('.');
   const pb = b.split('.');
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
