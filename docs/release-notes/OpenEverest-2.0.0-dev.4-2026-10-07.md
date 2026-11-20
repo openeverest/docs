@@ -44,7 +44,7 @@ Plugins can now match the core's look without depending on its internals. The ho
 
 ---
 
-## ⚠️⚠️⚠️ Breaking changes for provider developers and administrators
+## ⚠️⚠️⚠️ Breaking changes for provider developers and administrators {/* #breaking-changes-for-provider-developers-and-administrators */}
 
 **1. `schedules[].retentionCopies` → `schedules[].retention`** on `Instance` and `InstancePreset`: `retentionCopies: 7` becomes `retention: {type: count, count: 7}`. After the CRD upgrade `retentionCopies` is pruned, so those schedules keep every backup until `retention` is set.
 
