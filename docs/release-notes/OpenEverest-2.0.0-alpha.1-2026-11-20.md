@@ -181,22 +181,24 @@ There is no conversion for any of these changes, because v2 previews are fresh i
 
 **10. Uninstall.** `helm uninstall` is refused while core still protects monitoring destinations, backup storages or Secrets with its finalizers, because removing core first would leave them, and their namespaces, impossible to delete. Delete those objects, or their namespaces, then uninstall. To uninstall anyway, run `helm uninstall --no-hooks` and remove the finalizers by hand.
 
+**11. `/cluster-info` and `/resources` are removed.** `GET /v1/cluster-info` and `GET /v1/resources` are gone. Read a cluster's storage classes from `GET /v1/clusters/{cluster}/storage-classes`. Nothing replaces the resource capacity that `/resources` reported.
+
 ### For provider developers
 
-**11. Status helpers.** `controller.Status` now reports facts: `Converged`, `Available`, `ConnectionDetails`, `Operations`, `Problems` and desired replicas per component (`WithDesiredReplicas`). The phase-named helpers (`Creating`, `Updating`, …) still work as deprecated aliases. A provider that needs edits blocked during a long operation must name it: `StorageResizing` or `Upgrading`.
+**12. Status helpers.** `controller.Status` now reports facts: `Converged`, `Available`, `ConnectionDetails`, `Operations`, `Problems` and desired replicas per component (`WithDesiredReplicas`). The phase-named helpers (`Creating`, `Updating`, …) still work as deprecated aliases. A provider that needs edits blocked during a long operation must name it: `StorageResizing` or `Upgrading`.
 
-**12. `Validate` takes no client.** Move rules that read other objects into `ValidateReferences`, and drop the checks the runtime now does itself: catalog lookups, required components, and single-field bounds. Instances that do not match what their Provider publishes stop syncing with `ValidationFailed`.
+**13. `Validate` takes no client.** Move rules that read other objects into `ValidateReferences`, and drop the checks the runtime now does itself: catalog lookups, required components, and single-field bounds. Instances that do not match what their Provider publishes stop syncing with `ValidationFailed`.
 
-**13. Backup classes.**
+**14. Backup classes.**
 - `BackupClass` requires `spec.backupStorageClasses`.
 - `providerManaged.providerRef` replaces `supportedProviders`.
 - The `Job` execution mode is removed (`spec.job`, `status.jobRef`).
 - provider-runtime claims the classes a provider ships. Providers need `patch` on `backupclasses/status` and `get`, `list` and `watch` on `backupstorageclasses`.
 - `BackupStorageCredentialsNotFound` is replaced by `BackupStorageNotAccepted`.
 
-**14. Presets in provider charts.** A provider chart that ships default presets must ship them as `ClusterInstancePreset`.
+**15. Presets in provider charts.** A provider chart that ships default presets must ship them as `ClusterInstancePreset`.
 
-**15. Monitoring.** The monitoring contract is new: `Provider.spec.monitoring`, `RequiredSources()` and `MonitoringBindings()`. The [provider-sdk](https://github.com/openeverest/provider-sdk) generates the declarations from `definition/monitoring.yaml`. A component type's `kind` is declared on `Provider.spec.componentTypes`.
+**16. Monitoring.** The monitoring contract is new: `Provider.spec.monitoring`, `RequiredSources()` and `MonitoringBindings()`. The [provider-sdk](https://github.com/openeverest/provider-sdk) generates the declarations from `definition/monitoring.yaml`. A component type's `kind` is declared on `Provider.spec.componentTypes`.
 
 ---
 
@@ -262,8 +264,7 @@ There is no conversion for any of these changes, because v2 previews are fresh i
 
 - **Breaking changes**, detailed in [Breaking changes](#breaking-changes):
   - [#3652](https://github.com/openeverest/openeverest/pull/3652), [#3444](https://github.com/openeverest/openeverest/pull/3444), [#3432](https://github.com/openeverest/openeverest/pull/3432), [#3509](https://github.com/openeverest/openeverest/pull/3509), [#3549](https://github.com/openeverest/openeverest/pull/3549), [#3558](https://github.com/openeverest/openeverest/pull/3558), [#3419](https://github.com/openeverest/openeverest/pull/3419), [#3495](https://github.com/openeverest/openeverest/pull/3495), [#3617](https://github.com/openeverest/openeverest/pull/3617), [#3587](https://github.com/openeverest/openeverest/pull/3587), [#3595](https://github.com/openeverest/openeverest/pull/3595);
-  - [#3590](https://github.com/openeverest/openeverest/pull/3590), [#3398](https://github.com/openeverest/openeverest/pull/3398), [#3425](https://github.com/openeverest/openeverest/pull/3425), [#3603](https://github.com/openeverest/openeverest/pull/3603), [#3525](https://github.com/openeverest/openeverest/pull/3525), [#3588](https://github.com/openeverest/openeverest/pull/3588), [#3359](https://github.com/openeverest/openeverest/pull/3359), [#3473](https://github.com/openeverest/openeverest/pull/3473).
-- `GET /v1/clusters/{cluster}/cluster-info` is deprecated in favour of the storage classes routes ([#3669](https://github.com/openeverest/openeverest/pull/3669)).
+  - [#3590](https://github.com/openeverest/openeverest/pull/3590), [#3398](https://github.com/openeverest/openeverest/pull/3398), [#3425](https://github.com/openeverest/openeverest/pull/3425), [#3603](https://github.com/openeverest/openeverest/pull/3603), [#3525](https://github.com/openeverest/openeverest/pull/3525), [#3588](https://github.com/openeverest/openeverest/pull/3588), [#3359](https://github.com/openeverest/openeverest/pull/3359), [#3473](https://github.com/openeverest/openeverest/pull/3473), [#3663](https://github.com/openeverest/openeverest/pull/3663).
 - Local development, CI and linting ([#3627](https://github.com/openeverest/openeverest/pull/3627), [#3512](https://github.com/openeverest/openeverest/pull/3512), [#3621](https://github.com/openeverest/openeverest/pull/3621), [#3343](https://github.com/openeverest/openeverest/pull/3343), [#3372](https://github.com/openeverest/openeverest/pull/3372), [#3599](https://github.com/openeverest/openeverest/pull/3599)).
 - Dependency updates, including cert-manager 1.20.3 and k3s 1.37.2 ([#3630](https://github.com/openeverest/openeverest/pull/3630), [#3532](https://github.com/openeverest/openeverest/pull/3532), [#3570](https://github.com/openeverest/openeverest/pull/3570), [#3572](https://github.com/openeverest/openeverest/pull/3572), [#3574](https://github.com/openeverest/openeverest/pull/3574), [#3576](https://github.com/openeverest/openeverest/pull/3576)).
 
@@ -350,7 +351,9 @@ Build a provider, a monitoring integration or a plugin against the new API, and 
 
 ## Thanks to our contributors
 
-@AdityaPimpalkar, @jhalak101205-cpu, @SamarthSRao, @sb123sb123, @Shubhamnish1030, @ujjwalv01, @VijetaPriya47
+@AdityaPimpalkar, @chilagrow, @jhalak101205-cpu, @oksana-grishchenko, @recharte, @SamarthSRao, @sb123sb123, @Shubhamnish1030, @solovevayaroslavna, @spron-in, @ujjwalv01, @VijetaPriya47
+
+**First-time contributors:** @SamarthSRao, @sb123sb123, @Shubhamnish1030, @ujjwalv01. Welcome!
 
 ---
 
