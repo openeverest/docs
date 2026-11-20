@@ -8,9 +8,9 @@ OpenEverest is installed with Helm in two parts:
 1. **The core** — the `openeverest/openeverest` chart. It installs the server (UI and API), the controller, the custom resource definitions and the Plugin Hub into the `everest-system` namespace.
 2. **One or more providers** — one chart per technology. See [Add providers](install_providers.md).
 
-:::warning[Developer Preview]
+:::warning[Alpha]
 
-OpenEverest 2 is a Developer Preview. Install it on a fresh cluster: there is no upgrade path from OpenEverest 1.x yet, and running 1.x and 2 in the same cluster is not supported.
+OpenEverest 2 is in Alpha. Install it on a fresh cluster: there is no upgrade path from earlier previews or from OpenEverest 1.x yet, and running 1.x and 2 in the same cluster is not supported.
 
 :::
 
@@ -62,7 +62,7 @@ kubectl get secret everest-accounts -n everest-system \
 
 :::note
 
-In the Developer Preview, the initial password is stored in this Secret in plain text. Change it after your first login — see [Users](../administer/manage_users.md).
+In OpenEverest 2, the initial password is stored in this Secret in plain text. Change it after your first login — see [Users](../administer/manage_users.md).
 
 :::
 

@@ -77,9 +77,11 @@ g, admin, role:admin
 | `monitoring-destinations` | `<cluster>/<namespace>/<name>` | Monitoring destinations. Users need `read` on a destination to use it in an instance. |
 | `monitoring-classes` | `<cluster>/<class>` | Monitoring technologies (read-only). |
 | `monitoring-bindings` | `<cluster>/<namespace>/<name>` | Links between instances and destinations (read-only). |
-| `monitoring-configs` | `<cluster>/<namespace>/<name>` | Legacy monitoring endpoints in **Settings**. Being removed. |
+| `secrets` | `<cluster>/<namespace>/<secret>` | Labelled Secrets, such as backup storage and monitoring credentials. `read` never returns their data. See [Secrets and credentials](../security/secrets.md). |
 | `plugins` | `<cluster>/<plugin>` | Registered plugins. |
 | `plugin/<name>` | `*` | Using a plugin's pages and API. |
+| `installed-extensions` | `<cluster>/<name>` | Extensions installed from the Plugin Hub. |
+| `platform-events` | `*` | Login and logout [events](events.md) (`read` only). |
 | `clusters` | `<cluster>` | Managed Kubernetes clusters. |
 
 OpenEverest currently manages one Kubernetes cluster, which is always called `main`.
@@ -91,8 +93,9 @@ OpenEverest currently manages one Kubernetes cluster, which is always called `ma
 | `read` | See the object. |
 | `create`, `update`, `delete` | Change the object. |
 | `read-connection` | Read an instance's credentials. **`read` does not include it**, so read-only users can see an instance without seeing its password. |
-| `deploy` | Create an instance with any settings. Users with `create` but without `deploy` can only create instances that match an [instance preset](instance_presets.md) exactly. |
-| `use` | Use a plugin (on the `plugin/<name>` resource). |
+| `read-events` | Read the [lifecycle events](events.md) about an object. **`read` does not include it.** |
+| `create-from-preset` | Create an instance only as an exact copy of an [instance preset](instance_presets.md). Users with `create` can create instances with any settings and don't need it. |
+| `use` | Use a plugin (on the `plugin/<name>` resource), or reference a Secret from a backup storage or a monitoring destination (on `secrets`). |
 | `*` | All actions. |
 
 ### Objects
@@ -133,13 +136,15 @@ p, role:team-a, instances, *, main/team-a/*
 p, role:team-a, backups, *, main/team-a/*
 p, role:team-a, restores, *, main/team-a/*
 p, role:team-a, backup-storages, *, main/team-a/*
+p, role:team-a, backup-storage-classes, read, */*
+p, role:team-a, secrets, *, main/team-a/*
 p, role:team-a, monitoring-destinations, read, main/team-a/*
 p, role:team-a, monitoring-classes, read, */*
 g, bob, role:team-a
 g, team-a-developers, role:team-a
 ```
 
-Bob and every member of the `team-a-developers` group from the identity provider can manage instances, backups and restores in the `team-a` namespace, and see nothing else.
+Bob and every member of the `team-a-developers` group from the identity provider can manage instances, backups, restores, backup storages and their credentials in the `team-a` namespace, and see nothing else.
 
 ### Self-service with presets
 
@@ -148,13 +153,13 @@ p, role:developer, namespaces, read, main/dev
 p, role:developer, providers, read, */*
 p, role:developer, instance-presets, read, main/dev/*
 p, role:developer, cluster-instance-presets, read, */*
-p, role:developer, instances, create, main/dev/*
+p, role:developer, instances, create-from-preset, main/dev/*
 p, role:developer, instances, read, main/dev/*
 p, role:developer, instances, read-connection, main/dev/*
 p, role:developer, instances, delete, main/dev/*
 ```
 
-Developers can create instances in `dev` only from presets, because they have `create` but not `deploy`.
+Developers can create instances in `dev` only from presets, because they have `create-from-preset` but not `create`. An instance that differs from its preset — in any setting, label or annotation — is refused with `403` and reason `PresetMismatch`, and the message lists what differs.
 
 ### Access to a plugin
 

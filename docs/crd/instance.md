@@ -100,60 +100,133 @@ Held changes are listed in `status.pendingMaintenance` with a description, a sev
 
 ## Status
 
+The status follows the [Kubernetes API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties): conditions are the source of truth, and the phase is only a coarse label for display. Tools that read conditions, such as `kubectl wait`, Argo CD, Flux and Helm, understand the state of an instance without knowing anything about the provider.
+
 | Field | Description |
 | --- | --- |
-| `phase` | `Pending`, `Provisioning`, `Initializing`, `Ready`, `Updating`, `Restoring`, `Suspending`, `Suspended`, `Resuming`, `Terminating` or `Failed`. |
+| `phase` | `Pending` — the instance has never served clients; `Provisioned` — it has been available at least once; `Terminating` — it is being deleted. Use it for wording only, never to decide what to do. |
+| `observedGeneration` | The `metadata.generation` of the spec the status describes. While it is lower than `metadata.generation`, the provider has not reported on the latest change yet. It is `-1` until a provider first reports. |
 | `version` | The version bundle that is currently applied. |
-| `message` | A human-readable summary of the state. |
 | `conditions` | See [Conditions](#conditions). |
-| `components` | For each component: the label selector of its pods, the number of replicas and the number of ready replicas. |
+| `components` | For each component: the label selector of its pods, `replicas` (the pods that are not terminating), `readyReplicas`, and `desiredReplicas` (how many pods it will have once the current spec is applied). |
 | `connectionSecretRef` | The Secret with the connection details, named `<instance>-conn`. See [Connect to an instance](../use/connect.md). |
-| `backup` | Backup state, including the point-in-time recovery window of each storage. |
+| `backup` | The state of each backup storage, including its point-in-time recovery window. See [Instance backup settings](backups.md#instance-backup-settings). |
 | `monitoring` | The metrics endpoints the instance exposes (`sources`) and the state of each monitoring destination (`destinations`). |
 | `pendingMaintenance` | Disruptive changes waiting for approval. |
 
+`kubectl get instances` shows the `AVAILABLE` and `STATUS` columns; `-o wide` adds `PHASE`, `STALLED`, `TOPOLOGY` and `MESSAGE`. `spec.providerRef` can't be changed after creation.
+
 ### Conditions
 
-| Condition | Meaning |
-| --- | --- |
-| `Ready` | The instance is up and accepting connections. |
-| `PodsScheduled` | `False` when a pod has waited more than a minute for a node. The message says which component and why. |
-| `PodsReady` | `False` when pods are not ready. The reason names the worst problem, for example `CrashLoopBackOff`, `ImagePullBackOff`, `CreateContainerConfigError` or `NotReady`. |
-| `BackupConfigured` | Whether the backup configuration was applied. `False` when, for example, the provider doesn't support a requested setting. |
-| `MonitoringConfigured` | Whether every monitoring destination is configured. Present only when the instance has monitoring destinations. |
+**Summary conditions** answer the questions every reader has:
 
-Example status of a PostgreSQL instance that is starting:
+| Condition | Question |
+| --- | --- |
+| `Available` | Can clients use the instance right now? It stays `True` through a rolling change of a highly available instance, and is `False` while a restore replaces the data. |
+| `Ready` | Has the latest spec been carried out in full? Its **reason is the status word** that the UI, `everestctl` and `kubectl get` show — for example `Ready`, `Creating`, `ApplyingChanges`, `Upgrading`, `Restoring`, `CrashLoopBackOff` or `BackupStorageNotFound` — and its message is a sentence you can act on. |
+| `Reconciling` | Is the provider still working on it? Wait. |
+| `Stalled` | Has progress stopped in a way that waiting won't fix? Act. While `Ready` is not `True`, exactly one of `Reconciling` and `Stalled` is `True`. |
+| `NeedsAttention` | Is there a problem someone may want to look at? It is `True` as soon as a check fails, before it is known whether the problem clears by itself. |
+
+**Checks** are `True` when fine, `Unknown` while not known yet, and `False` when there is a problem. These gate `Ready`:
+
+| Check | `False` when |
+| --- | --- |
+| `ReferencesResolved` | The provider, the user Secret or another object the instance names is missing or doesn't fit. |
+| `Synced` | The provider's calls to apply the spec or read the state have failed for a minute in a row. |
+| `PodsScheduled` | A pod has waited more than a minute for a node. The message says which component and why. |
+| `PodsReady` | A pod is in a back-off: `CrashLoopBackOff`, `ImagePullBackOff` or `CreateContainerConfigError`. It is `Unknown` with reason `NotReady` while pods are only starting. |
+| `EngineHealthy` | The provider reports a problem with the engine. |
+| `DataSourceReady` | The instance can't be created from its `spec.dataSource`. Set only for instances created from a backup. |
+| `BackupConfigured` | A backup storage or the backup class can't be used. Set only when backups are enabled. |
+
+These checks don't gate `Ready`: `ConnectionDetailsReady` (the connection Secret is filled in), `MonitoringConfigured` and `MonitoringReady` (see [Monitoring](monitoring.md)).
+
+**Operations** are `True` while a long operation runs, then `False` with reason `Succeeded`: `Restoring`, `Upgrading` and `StorageResizing`. While one runs, it gives `Ready` its status word.
+
+**Other conditions:** `MaintenancePending` (a disruptive change waits for approval), `ComponentVersionDeprecated` (a component runs a version the provider deprecated) and `Unattended`.
+
+### When an instance is stalled
+
+| Situation | `Stalled` becomes `True` |
+| --- | --- |
+| The provider rejects the spec (reason `ValidationFailed`), gives up retrying, or reports a problem it can't recover from | At once |
+| A check fails, for example a missing Secret, a crash loop or pods that can't be scheduled | After 10 minutes. Until then, only `NeedsAttention` is `True`. |
+| Nothing fails, but nothing finishes either, and no operation runs | After 30 minutes |
+
+The deadlines start again when you change the spec.
+
+### When no provider reconciles the instance
+
+Only the provider named in `spec.providerRef` updates an instance's status. When it doesn't, OpenEverest sets the `Unattended` condition itself:
+
+| Situation | `Unattended` |
+| --- | --- |
+| The provider in `spec.providerRef` doesn't exist, for 1 minute — for example because of a typo | `True`, reason `ProviderNotFound`. The message lists the installed providers. |
+| The provider exists, but hasn't reported on the current spec for 5 minutes | `Unknown`, reason `NotResponding`. Check that the provider is running, and its logs. |
+
+`Unattended` is present only while something is wrong, and is removed as soon as the provider catches up. Because `spec.providerRef` can't be changed, delete an instance that names the wrong provider and create it again.
+
+### Example
+
+A PostgreSQL instance that is starting:
 
 ```yaml
 status:
-  phase: Initializing
-  message: database is initializing
-  version: 18.4-1
+  phase: Pending
+  observedGeneration: 1
   components:
     - name: engine
       replicas: 2
+      desiredReplicas: 2
       readyReplicas: 0
       selector: core.openeverest.io/component=engine,core.openeverest.io/instance=orders-db
     - name: proxy
       replicas: 2
+      desiredReplicas: 2
       readyReplicas: 0
       selector: core.openeverest.io/component=proxy,core.openeverest.io/instance=orders-db
   conditions:
-    - type: BackupConfigured
+    - type: Available
+      status: "False"
+      reason: NotAvailable
+    - type: Ready
+      status: "False"
+      reason: Creating
+      message: Waiting for the database to start
+    - type: Reconciling
       status: "True"
-      reason: Configured
-      message: Backup configuration applied to engine
+      reason: Creating
+      message: Waiting for the database to start
+    - type: Stalled
+      status: "False"
+      reason: Reconciling
+    - type: NeedsAttention
+      status: "False"
+      reason: NoProblems
+    - type: ReferencesResolved
+      status: "True"
+      reason: Resolved
+    - type: Synced
+      status: "True"
+      reason: Synced
     - type: PodsScheduled
       status: "True"
       reason: Scheduled
     - type: PodsReady
-      status: "False"
+      status: "Unknown"
       reason: NotReady
       message: |-
         engine: 2 of 2 pods are not ready
         proxy: 2 of 2 pods are not ready
-    - type: Ready
-      status: "False"
-      reason: Initializing
-      message: database is initializing
+    - type: BackupConfigured
+      status: "True"
+      reason: Configured
+      message: Backup configuration applied to engine
+```
+
+To wait until an instance has applied its latest spec:
+
+```sh
+kubectl wait instance/orders-db -n demo --for=condition=Ready --timeout=10m
 ```

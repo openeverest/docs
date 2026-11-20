@@ -5,9 +5,9 @@ import TabItem from '@theme/TabItem';
 
 This guide creates a local Kubernetes cluster, installs OpenEverest and a provider, and creates your first instance. It takes about fifteen minutes.
 
-:::warning[Developer Preview]
+:::warning[Alpha]
 
-OpenEverest 2 is a Developer Preview and is not intended for production. Install it on a fresh cluster: there is no upgrade path from OpenEverest 1.x yet, and running 1.x and 2 in the same cluster is not supported.
+OpenEverest 2 is in Alpha and is not intended for production. Install it on a fresh cluster: there is no upgrade path from earlier previews or from OpenEverest 1.x yet, and running 1.x and 2 in the same cluster is not supported.
 
 :::
 
@@ -155,15 +155,15 @@ kubectl create namespace demo
 
 3. Click **Create**.
 
-The instance appears in the list with the status **Initializing** and becomes **Ready** when all its components are running — on a local cluster, after two to three minutes. You can follow the same progress with `kubectl`:
+The instance appears in the list with the status **Creating** and becomes **Ready** when all its components are running — on a local cluster, after two to three minutes. You can follow the same progress with `kubectl`:
 
 ```sh
 kubectl get instances -n demo
 ```
 
 ```text
-NAME        PROVIDER                      VERSION   PHASE   AGE
-orders-db   provider-percona-postgresql   18.4-1    Ready   2m44s
+NAME        PROVIDER                      VERSION   AVAILABLE   STATUS   AGE
+orders-db   provider-percona-postgresql   18.4-1    True        Ready    2m44s
 ```
 
 ## Clean up

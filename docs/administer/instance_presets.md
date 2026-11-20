@@ -2,7 +2,7 @@
 
 :::info[Availability]
 
-Instance presets are available in OpenEverest 2.0.0 Developer Preview 3 and later. In the current release, users can deploy from a preset in one click. Editing a preset before deploying, and managing presets from the UI, arrive in a later release.
+Instance presets are available in OpenEverest 2.0.0 Developer Preview 3 and later; namespaced `InstancePreset` and cluster-wide `ClusterInstancePreset` since 2.0.0 Alpha 1. In the current release, users can create an instance from a preset in one click. Editing a preset before creating the instance, and managing presets from the UI, arrive in a later release.
 
 :::
 
@@ -155,7 +155,7 @@ The following demo shows the full flow of creating an instance from a preset:
 
 ## Restrict users to presets
 
-With [RBAC](rbac.md), you can let users create instances only from presets: grant them `create` on `instances` but not `deploy`. They can then deploy any preset they can read, but not change its settings.
+With [RBAC](rbac.md), you can let users create instances only from presets: grant them `create-from-preset` on `instances` instead of `create`. They can then create an instance from any preset they can read, but not change its settings or add labels or annotations. An instance that differs from its preset is refused with `403` and reason `PresetMismatch`, and the message lists what differs.
 
 ## Limitations
 

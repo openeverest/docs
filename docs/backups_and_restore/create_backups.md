@@ -20,14 +20,14 @@ You can add schedules when you create an instance — in the **Backups** step �
 1. Click **Create backup schedule**.
 2. Enter a name for the schedule and select the **Backup storage**.
 3. Set when the backup runs, for example every day at 02:00.
-4. Set **Retention copies** — the number of backups of this schedule to keep. `0` keeps all of them.
+4. Set the **Retention**: **Keep last N backups** keeps a number of backups of this schedule, **Keep for a period** keeps backups for a number of days, weeks or months, and **Keep all** never deletes backups automatically.
 5. Click **Create**.
 
 An instance can have several schedules, for example hourly backups kept for a day and daily backups kept for a month, each writing to a different storage.
 
 ### Time-based retention
 
-Instead of keeping a number of backups, you can keep backups for a period, such as 30 days. Time-based retention is set with `kubectl` and is supported only by providers whose engine supports it — for example PostgreSQL. Providers that don't support it report this in the instance's `BackupConfigured` condition.
+Instead of keeping a number of backups, you can keep backups for a period, such as 30 days. Time-based retention is supported only by providers whose engine supports it — for example PostgreSQL. Providers that don't support it report this in the instance's `BackupConfigured` condition. With `kubectl`:
 
 ```yaml
 retention:

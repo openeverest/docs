@@ -36,12 +36,11 @@ server:
 
 ## Single sign-on users
 
-For SSO users, the IdP issues and controls the tokens. OpenEverest validates them on every request, and they stop working when the user logs out of OpenEverest. A token of a user who was removed from the IdP stays valid until it expires, so configure short-lived access tokens in the IdP:
+When an SSO user signs in, the UI exchanges the ID token from the IdP for an OpenEverest **access token**, valid for **15 minutes** like the access tokens of built-in users (`ACCESS_TOKEN_TTL`). SSO users get no OpenEverest refresh token. Instead, the UI renews the session with the IdP in the background and exchanges the new ID token again. See [Keep SSO users signed in](sso_idp_integration.md#keep-sso-users-signed-in).
 
-- short-lived access tokens, for example 5 minutes;
-- long-lived refresh tokens.
+Because each renewal goes through the IdP, the IdP stays in control. A user who is disabled or removed in the IdP can't renew, and loses access when the current access token expires. OpenEverest only exchanges ID tokens issued in the last 5 minutes, so a captured ID token can't be used later.
 
-See the [Okta guide](https://developer.okta.com/docs/guides/refresh-tokens/main/) on refresh tokens for an example.
+The API accepts only access tokens issued by OpenEverest. Scripts that act as an SSO user must exchange an ID token first; see [API](../API.md#single-sign-on-users).
 
 ## Login rate limiting
 

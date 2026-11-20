@@ -24,7 +24,7 @@ graph LR
   R -- applies a backup<br/>or point in time --> I
 ```
 
-- **Backup storage** — an S3-compatible bucket, defined once per namespace and shared by the instances in it. See [Backup storage](backup_storage.md).
+- **Backup storage** — a bucket or other place to write backups to, defined once per namespace and shared by the instances in it. Its type is a backup storage class; OpenEverest ships `s3` for S3-compatible object storage. See [Backup storage](backup_storage.md).
 - **Backup class** — describes how backups are taken for one or more providers. Providers install their backup classes, so you normally just pick one. List them with `kubectl get backupclasses`.
 - **Backup** — one backup of an instance, taken on demand or by a schedule.
 - **Schedule** — a cron schedule on an instance that writes backups to one storage, with optional retention.
@@ -35,7 +35,7 @@ graph LR
 
 | Task | Where |
 | --- | --- |
-| Add an S3 bucket for backups | **Settings** > **Backups storages** — [Backup storage](backup_storage.md) |
+| Add a bucket for backups | **Settings** > **Backups storages** — [Backup storage](backup_storage.md) |
 | Take a backup now, or schedule backups | The instance's **Backups** tab — [Create backups](create_backups.md) |
 | Enable point-in-time recovery | The instance's **Backups** tab — [Point-in-time recovery](pitr.md) |
 | Restore an instance from a backup or a point in time | **Actions** > **Restore from a backup** — [Restore a backup](restore.md) |

@@ -19,7 +19,7 @@ This page is about the users who log in to OpenEverest. To manage the users *ins
 
 :::note
 
-`everestctl` is not published as a binary for the OpenEverest 2 Developer Preview. Build it from source with `make build-cli` on the release tag of the [openeverest repository](https://github.com/openeverest/openeverest). The `accounts` commands work with OpenEverest 2. Don't use the commands that install components — `install`, `uninstall`, `upgrade` and `namespaces` — they still target OpenEverest 1.x.
+`everestctl` is not published as a binary for OpenEverest 2 yet. Build it from source with `make build-cli` on the release tag of the [openeverest repository](https://github.com/openeverest/openeverest). The `accounts` commands work with OpenEverest 2. Don't use the commands that install components — `install`, `uninstall`, `upgrade` and `namespaces` — they still target OpenEverest 1.x.
 
 :::
 

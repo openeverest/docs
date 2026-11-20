@@ -23,7 +23,7 @@ OpenEverest is technology-agnostic: the core installs no database operator, no m
 2. You create an instance in the UI or through the API. `everest-server` checks your permissions and creates an `Instance` resource.
 3. The provider named in `spec.providerRef` sees the new `Instance` and creates the resources of its Kubernetes Operator — for example a `PerconaPGCluster` for the PostgreSQL provider.
 4. The Operator creates the pods, volumes and services.
-5. The provider reports the progress in the `Instance` status: phase, conditions, ready pods per component and connection details.
+5. The provider reports the progress in the `Instance` status: conditions, ready pods per component and connection details. If no provider picks the instance up, `everest-controller` says so with the `Unattended` condition.
 
 Backups and restores follow the same pattern: you create a `Backup` or `Restore`, `everest-controller` validates and tracks it, and the provider has its Operator carry it out.
 

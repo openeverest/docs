@@ -56,13 +56,15 @@ You can review different logs for additional information depending on the specif
 
     :::info[Important]
 
-    Events (Events are stored only for 60 mins; if there are any events older than 60 minutes, they will be lost).
+    Kubernetes keeps Events for one hour by default. Older events are lost.
 
     :::
 
     ```sh
-    kubectl get events --sort-by=".lastTimestamp"
+    kubectl get events -n <namespace> --sort-by=".lastTimestamp"
     ```
+
+    OpenEverest also records lifecycle events — who created, changed or deleted an object, and every change of an instance's status — as Kubernetes Events. See [Lifecycle events](../administer/events.md).
 
 ## Troubleshooting key areas
 
@@ -215,13 +217,15 @@ Here are the common issues related to the database operations:
 
 2. **Check the `Instance` object**
 
-    Verify the status and events of the `Instance` object. If it is not healthy, further investigation is required. Describing the object provides details about the database configuration.
+    The `STATUS` column names what the instance is doing or what is wrong, and `-o wide` adds the message. `kubectl describe` lists every condition: the checks that are `False` or `Unknown` tell you where to look. See [Instance status](../crd/instance.md#status).
 
     ```sh
-    kubectl get instance <instance-name> -n everest-system
-    kubectl describe instance <instance-name> -n everest-system
-    kubectl get instance <instance-name> -n everest-system -o yaml
+    kubectl get instance <instance-name> -n <namespace> -o wide
+    kubectl describe instance <instance-name> -n <namespace>
+    kubectl get instance <instance-name> -n <namespace> -o yaml
     ```
+
+    If the instance has the `Unattended` condition, no provider is working on it: the provider isn't installed, or it isn't running. Check the provider's deployment and logs.
 
 3. **Check the provider's underlying database object**
 

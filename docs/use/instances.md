@@ -16,20 +16,26 @@ When no instance exists yet, the page shows the installed providers instead, so 
 
 ## Instance status
 
-The status column shows the phase of the instance:
+The status column shows one status word. It is the same word in the UI, in `everestctl` and in `kubectl get instances`. Common ones:
 
 | Status | Meaning |
 | --- | --- |
-| **Pending** | The instance was accepted but the provider has not started creating it. |
-| **Provisioning** | The provider is creating the Kubernetes resources. |
-| **Initializing** | The resources exist and the engine is starting for the first time. |
-| **Ready** | The instance is healthy and accepts connections. |
-| **Updating** | A change, such as scaling or a configuration change, is being rolled out. |
-| **Restoring** | Data is being restored from a backup. |
-| **Terminating** | The instance is being deleted. |
-| **Failed** | The instance needs attention, for example because its pods keep crashing. |
+| **Creating** | The instance has never been up yet. The provider is creating it. |
+| **Ready** | The latest configuration is applied and every check passes. |
+| **Applying changes** | A change, such as scaling or a configuration change, is being rolled out. |
+| **Upgrading**, **Restoring**, **Resizing storage** | A long operation is running. |
+| **Pods starting** | Pods are not ready yet. |
+| **Pods can't be scheduled**, **Crash loop**, **Image can't be pulled** | Pods have a problem. |
+| **Invalid configuration** | The provider rejected the instance's settings. The message names each invalid field. |
+| **Secret not found**, **Backup storage not found** | An object the instance uses is missing. |
+| **Provider not found**, **Provider not responding** | No provider is working on the instance. See [When no provider reconciles the instance](../crd/instance.md#when-no-provider-reconciles-the-instance). |
+| **Deleting** | The instance is being deleted. |
 
-If some pods can't be scheduled or are not ready, the instance shows a warning with the reason, for example *"engine: 1 of 3 pods cannot be scheduled: 0/2 nodes are available: 2 node(s) didn't match pod anti-affinity rules."* See [Diagnostics](../troubleshoot/troubleshoot.md).
+The colour tells you whether to wait or act. Yellow means work is in progress, or a problem that may still clear by itself. Red means progress has stopped and someone has to act: either at once, for example after an invalid configuration, or after a problem has lasted 10 minutes.
+
+While an instance that has been up before is changing, the status also says whether clients can connect, for example **Upgrading · available** or **Restoring · unavailable**.
+
+When something needs attention, the instance page shows an alert with the reason and what to do, for example *"engine: 1 of 3 pods cannot be scheduled: 0/2 nodes are available: 2 node(s) didn't match pod anti-affinity rules."* While a restore, an upgrade or a storage resize runs, the instance can't be edited. See [Diagnostics](../troubleshoot/troubleshoot.md).
 
 ## Instance details
 
@@ -50,13 +56,21 @@ kubectl get instances -A
 ```
 
 ```text
-NAMESPACE   NAME            PROVIDER                      VERSION   PHASE          READY   REASON         AGE
-demo        catalog-db      percona-server-mongodb        8.0.32    Provisioning   False   Provisioning   14s
-demo        orders-db       provider-percona-postgresql   18.4-1    Initializing   False   Initializing   83s
-demo        session-cache   valkey                        9.1       Provisioning                          3s
+NAMESPACE   NAME            PROVIDER                      VERSION   AVAILABLE   STATUS             AGE
+demo        catalog-db      percona-server-mongodb        8.0.32    False       Creating           14s
+demo        orders-db       provider-percona-postgresql   18.4-1    True        ApplyingChanges    26m
+demo        session-cache   valkey                        9.1       True        Ready              3d
 ```
 
-For the full status, including the conditions and the number of ready pods per component:
+`STATUS` is the reason of the `Ready` condition. `kubectl get` shows the reason as one word, for example `ApplyingChanges`, where the UI shows **Applying changes**. Add `-o wide` for the phase, whether the instance is stalled, and the message.
+
+To wait until an instance is ready:
+
+```sh
+kubectl wait instance/orders-db -n demo --for=condition=Ready --timeout=10m
+```
+
+For the full status, including every condition and the number of ready pods per component:
 
 ```sh
 kubectl get instance orders-db -n demo -o yaml

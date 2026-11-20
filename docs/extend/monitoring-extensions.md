@@ -4,7 +4,7 @@ A monitoring extension connects OpenEverest instances to one monitoring technolo
 
 :::info[Work in progress]
 
-The monitoring extension API was added after OpenEverest 2.0.0 Developer Preview 4 and is still evolving.
+The monitoring extension API is new in OpenEverest 2.0.0 Alpha 1 and is still evolving.
 
 :::
 

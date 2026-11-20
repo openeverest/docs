@@ -2,9 +2,9 @@
 
 The OpenEverest core and each provider are separate Helm releases with their own versions. You upgrade them separately: first the core, then the providers.
 
-:::warning[Developer Preview]
+:::warning[Alpha]
 
-Upgrades between OpenEverest 2 Developer Preview releases are **not supported**. The `Instance` and `Provider` APIs change between previews without a migration path, so install each preview on a fresh cluster. Upgrading from OpenEverest 1.x to 2 is not supported either; a migration path is planned for the General Availability release.
+Upgrades between OpenEverest 2 preview releases — Developer Previews, Alphas and Betas — are **not supported**. The APIs change between previews without a migration path, so install each preview on a fresh cluster. Upgrading from OpenEverest 1.x to 2 is not supported either; a migration path is planned for the General Availability release.
 
 The procedure below describes how upgrades work, for patch releases and for future releases.
 

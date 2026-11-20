@@ -2,9 +2,9 @@
 
 OpenEverest is an open-source platform for running data workloads on Kubernetes. It gives you one UI, one API and one access-control model for provisioning and operating databases, caches, vector stores, object storage, AI model serving and other stateful technologies — on any Kubernetes cluster, in the cloud or on-premises.
 
-:::warning[Developer Preview]
+:::warning[Alpha]
 
-These docs describe OpenEverest 2, which is a **Developer Preview**: it is not feature-complete and not intended for production. OpenEverest 1.x remains the supported release — see the [1.x documentation](https://openeverest.io/docs/current/).
+These docs describe OpenEverest 2, which is in **Alpha**: features and APIs can still change before General Availability, and it is not intended for production. OpenEverest 1.x remains the supported release — see the [1.x documentation](https://openeverest.io/docs/current/).
 
 :::
 
