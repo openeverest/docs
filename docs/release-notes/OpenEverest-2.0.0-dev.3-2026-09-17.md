@@ -62,7 +62,7 @@ Writing a topology UI schema meant editing YAML, rebuilding, reinstalling the pr
 
 ---
 
-## ⚠️⚠️⚠️ Breaking changes for provider and plugin developers
+## ⚠️⚠️⚠️ Breaking changes for provider and plugin developers {/* #breaking-changes-for-provider-and-plugin-developers */}
 
 **1. `Backup.spec.instanceRef` moved into a discriminated `origin`.** A `Backup` no longer implies a live producer: `origin.type` is `Instance` or `External`, the latter naming data already in a `BackupStorage` with no operator object behind it. Only the schema and runtime plumbing land here — nothing yet discovers or creates `External` backups — but the shape change is immediate.
 
