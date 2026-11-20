@@ -66,6 +66,7 @@ spec:
 | `backup` | Backup class, storages, schedules and point-in-time recovery. See [Backups and restores](backups.md). |
 | `dataSource` | Create the instance from a backup or a point in time. See [Create an instance from a backup](../backups_and_restore/create_from_backup.md). |
 | `monitoring.destinations` | Up to 8 monitoring destinations to send to, each with a `name`, a `destinationRef.name` and optional `parameters`. See [Monitoring](monitoring.md). |
+| `monitoring.sources.metrics.policy` | When the provider runs its metrics exporters: `OnDemand` (default) while a destination needs metrics, `Always` even without destinations. See [Expose metrics without a destination](../use/monitoring.md#expose-metrics-without-a-destination). |
 | `userSecretRef.name` | Secret with the initial credentials, for providers that support it. Immutable. When omitted, the provider generates credentials. |
 | `maintenance` | How disruptive changes are approved. See [Maintenance](#maintenance). |
 | `deletionPolicy` | What happens to the instance's `Backup` and `Restore` resources when it is deleted: `Cascade` (default) deletes them, `Orphan` keeps them. |
