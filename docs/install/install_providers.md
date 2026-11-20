@@ -9,7 +9,7 @@ A provider adds one technology to OpenEverest. You can install as many providers
 
 ## Find a provider
 
-The **Plugin Hub** in the OpenEverest UI lists all published providers and plugins, with their maturity, the OpenEverest versions they support, whether they are installed, and the exact `helm install` command for each. Open it from the **Plugin Hub** entry in the left menu. The same catalog is available on [GitHub](https://github.com/openeverest/hub).
+The **Plugin Hub** in the OpenEverest UI lists all published providers, with their maturity, the OpenEverest versions they support, whether they are installed, and the exact `helm install` command for each. Open it from the **Plugin Hub** entry in the left menu. The same catalog is available on [GitHub](https://github.com/openeverest/hub).
 
 What each provider supports — topologies, backups, point-in-time recovery, monitoring, exposure options — differs. The provider's page in the Plugin Hub and its README describe its capabilities and configuration.
 

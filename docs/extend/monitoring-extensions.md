@@ -29,3 +29,44 @@ The core connects the two: for every instance entry it creates a `MonitoringBind
 ## Build a monitoring extension
 
 The `provider-runtime/monitoring` package of the [openeverest repository](https://github.com/openeverest/openeverest) contains the helpers an extension's controller uses to claim a class and to report the status of destinations and bindings. The existing extensions in the [openeverest GitHub organization](https://github.com/openeverest), such as [monitoring-prometheus](https://github.com/openeverest/monitoring-prometheus), are working examples.
+
+A monitoring extension also needs to respect the provider contract:
+
+- declare every `MonitoringClass` it installs and the mode in which each class is fulfilled;
+- validate the destination parameters and authentication modes declared by the class;
+- write only the status it owns — destination `Ready` and binding `Configured`;
+- for an extension-managed class, require only the metrics or connection capabilities published by the provider;
+- for a provider-managed class, match the operator-native integration and supported agent versions declared by the provider.
+
+The API types and CRD reference are documented in [Monitoring custom resources](../crd/monitoring.md). The foundational API was introduced in [openeverest/openeverest#3440](https://github.com/openeverest/openeverest/pull/3440).
+
+## Publish to the Hub
+
+Publish the chart to an OCI registry, then add an integration formula at `extensions/integrations/<slug>/` in the [Hub repository](https://github.com/openeverest/hub). A monitoring formula has `metadata.type: integration` and an `integration` block in `spec`:
+
+```yaml
+metadata:
+  type: integration
+
+spec:
+  integration:
+    area: monitoring
+    monitoring:
+      classes: [prometheus]
+      executionModes: [ExtensionManaged]
+      requires:
+        metrics: true
+```
+
+| Field | Meaning |
+| --- | --- |
+| `area` | The integration area. Monitoring is the currently supported area. |
+| `classes` | The `MonitoringClass` names installed by the chart. |
+| `executionModes` | How the classes are fulfilled: `ProviderManaged`, `ExtensionManaged`, or both. |
+| `requires.metrics` | The providers' components must publish metrics endpoints. Use for extension-managed metric collectors. |
+| `requires.connection` | The providers must publish connection endpoints and accept pod annotations. Use for external agents that discover database connections. |
+| `nativeIntegration` | The operator-native integration name required by a provider-managed class, matched against `Provider.spec.monitoring.integrations`. |
+
+Declare the chart, version, and Helm release settings under `spec.artifacts` and `spec.install`, and put external services — for example a PMM server or Prometheus Operator — in `spec.install.prerequisites`. The Hub formula describes discovery and installation; the external monitoring system is not part of the extension's controller chart.
+
+The [monitoring formulas in the Hub](https://github.com/openeverest/hub/tree/main/extensions/integrations) are working examples. See [Plugin Hub](hub.md#publishing-an-extension) for the complete publishing flow.

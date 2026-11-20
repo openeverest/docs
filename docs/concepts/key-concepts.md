@@ -94,4 +94,4 @@ A generic plugin extends OpenEverest with features that are not tied to one tech
 
 ## Plugin Hub
 
-The Plugin Hub is the catalog of providers and plugins, shown inside OpenEverest. It tells you what is available, what is installed, and how to install the rest. See [Plugin Hub](../extend/hub.md).
+The Plugin Hub is the catalog of providers, generic plugins, and integrations, shown inside OpenEverest. It tells you what is available, what is installed, and how to install the rest. See [Plugin Hub](../extend/hub.md).

@@ -36,7 +36,18 @@ OpenEverest decides the mode per provider. `kubectl get monitoringclass <name> -
 
 ## Install a monitoring extension
 
-Monitoring extensions are installed with Helm, like providers. Each extension's README describes its installation, chart values and prerequisites — for example [monitoring-pmm](https://github.com/openeverest/monitoring-pmm) for PMM 3 or [monitoring-prometheus](https://github.com/openeverest/monitoring-prometheus) for the Prometheus Operator.
+Monitoring extensions are installed with Helm, like providers. Find them under **Integrations** in the [Plugin Hub](../extend/hub.md), or browse the [Hub catalog](https://github.com/openeverest/hub/tree/main/extensions/integrations). The catalog entry shows the chart version, prerequisites, compatibility and install command.
+
+For example, to install the Prometheus extension into `everest-system`:
+
+```sh
+helm install monitoring-prometheus \
+  oci://ghcr.io/openeverest/charts/monitoring-prometheus \
+  --version 0.1.0 \
+  --namespace everest-system
+```
+
+Install the prerequisites named by the extension as well. Monitoring extensions connect to an external monitoring system; they do not install a PMM server, Prometheus, Coroot, or VictoriaMetrics backend unless their README explicitly says otherwise.
 
 Check that the class is installed and claimed by its controller:
 
