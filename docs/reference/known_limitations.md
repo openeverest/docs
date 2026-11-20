@@ -8,7 +8,7 @@ OpenEverest 2 is in Alpha. This page lists what is missing or behaves differentl
 - **No upgrades between preview releases.** The APIs change between Developer Previews, Alphas and Betas without a migration path. Install each one on a fresh cluster.
 - **No migration from OpenEverest 1.x yet.** A migration path is planned for the General Availability release. OpenEverest 1.x and 2 can't run in the same cluster.
 - **Helm only.** `everestctl install`, `uninstall`, `upgrade` and `namespaces` still target OpenEverest 1.x, and `everestctl` is not published as a binary for OpenEverest 2. Commands such as `everestctl accounts` and `everestctl settings` work when built from source.
-- **Provider versions must match the core.** A provider built for another OpenEverest release may not work. Check the compatibility shown in the Plugin Hub and the versions named in the release notes.
+- **Provider versions must match the core.** A provider built for another OpenEverest release may not work. Each provider's README lists the OpenEverest versions it supports.
 - **One cluster.** OpenEverest manages only the Kubernetes cluster it runs in (`main`).
 
 ## Capabilities depend on the provider

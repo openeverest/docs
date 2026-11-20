@@ -298,7 +298,7 @@ There is no conversion for any of these changes, because v2 previews are fresh i
 ### Before you install
 
 - **Install on a fresh cluster.** You cannot upgrade from Developer Preview 4 or from v1. Several CRDs change shape, and `InstancePreset` changes scope, so there is no conversion. Running v1 and v2 side by side in one cluster is not supported.
-- **Use providers built for this release.** A provider built on an older provider-runtime writes Instance phases that the new CRD rejects. Core, the Helm chart and every provider move together; the versions are listed below.
+- **Use providers built for this release.** A provider built on an older provider-runtime writes Instance phases that the new CRD rejects, so core, the Helm chart and every provider move together.
 - **Keep running v1 for production.** A v1 → v2 migration path ships with v2 General Availability. See [v1 support and end-of-life timeline](#v1-support-and-end-of-life-timeline).
 
 ### Install
@@ -322,11 +322,7 @@ kubectl port-forward svc/everest 8080:8080 -n everest-system
 
 `everestctl` is not published as a binary with this release, because its `install` and `uninstall` commands still target v1. To use its day-2 commands against a v2 installation, build it from source with `make build-cli` on the `v2.0.0-alpha.1` tag.
 
-Providers and monitoring integrations are released independently. Install them from their own repositories or from the Plugin Hub, and pick versions built against `2.0.0-alpha.1`. Earlier provider releases write Instance phases this release rejects.
-
-- Providers: [MongoDB](https://github.com/openeverest/provider-percona-server-mongodb) `TBD` · [MySQL](https://github.com/openeverest/provider-percona-xtradb-cluster) `TBD` · [PostgreSQL](https://github.com/openeverest/provider-percona-postgresql) `TBD`
-- Monitoring integrations: [PMM](https://github.com/openeverest/monitoring-pmm) `0.1.0` · [Prometheus](https://github.com/openeverest/monitoring-prometheus) `0.1.0` · [VictoriaMetrics](https://github.com/openeverest/monitoring-victoriametrics) `0.1.0` · [Coroot](https://github.com/openeverest/monitoring-coroot) `0.1.0`
-- Plugins: [Audit](https://github.com/solanicaio/plugin-audit) `TBD`
+Providers, monitoring integrations and plugins are released independently, with their own versions. Install them from the [Plugin Hub](https://openeverest.io/docs/2.0.0-alpha.1/extend/hub), and pick releases that support OpenEverest `2.0.0-alpha.1`: each one's README lists the OpenEverest versions it supports. Provider releases built for earlier previews write Instance phases this release rejects.
 
 ---
 

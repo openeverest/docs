@@ -34,7 +34,7 @@ Check the [prerequisites](prerequisites.md) first.
       --create-namespace
     ```
 
-    `--devel` lets Helm select pre-release versions. To install a specific version, add `--version`, for example `--version 2.0.0-dev.4`. List the available versions with `helm search repo openeverest/openeverest --devel --versions`.
+    `--devel` lets Helm select pre-release versions. To install a specific version, add `--version`, for example `--version 2.0.0-alpha.1`. List the available versions with `helm search repo openeverest/openeverest --devel --versions`.
 
 3. Check that the core is running:
 
