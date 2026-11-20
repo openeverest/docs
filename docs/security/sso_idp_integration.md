@@ -25,6 +25,10 @@ To integrate an IdP with OpenEverest, [configure OIDC on the IdP's side](#config
 
         :::
 
+- **Refresh tokens**: Allow the refresh token grant for the application, so that OpenEverest can keep users signed in. See [Keep SSO users signed in](#keep-sso-users-signed-in).
+
+- **ID token**: OpenEverest reads the user from the ID token, so the IdP must sign it with an asymmetric key (for example RS256 or ES256), and put the `groups` claim in it if you use [group-based RBAC](../administer/Idp_groups_integration.md). See [How sign-in works](#how-sign-in-works).
+
 ### Example: OIDC configuration on the provider side
 
 Below is an example of the configuration for the IdP provider Okta. 
@@ -53,6 +57,8 @@ Other popular IdPs include Microsoft Azure Active Directory, Auth0, Google Ident
 
     c. Sign-out redirect URIs - `<EVEREST_URL>`
 
+    d. Grant type - select **Refresh Token** in addition to **Authorization Code**.
+
     :::note[Note]
 
     Okta allows the use of HTTP for development purposes and in cases where the Admin explicitly permits it.
@@ -61,13 +67,13 @@ Other popular IdPs include Microsoft Azure Active Directory, Auth0, Google Ident
 
     ![!image](../images/sso_aap_integration.png)
 
-    d. Click **Save**.
+    e. Click **Save**.
 
-    e. Copy the `clientID` of the created app.
+    f. Copy the `clientID` of the created app.
 
     ![!image](../images/okta_client-id.png)
 
-    f. Navigate to **Security → API → Authorization Servers** and copy the `issuerURL` you’d like to use for the Everest authorization. 
+    g. Navigate to **Security → API → Authorization Servers** and copy the `issuerURL` you’d like to use for the Everest authorization. 
 
     ![!image](../images/okta_url.png)
 
@@ -89,7 +95,7 @@ The configuration is stored in the `everest-settings` ConfigMap in the `everest-
 
 ```sh
 helm install everest-core openeverest/openeverest \
-  --devel \
+  --version 2.0.0-alpha.1 \
   --namespace everest-system \
   --create-namespace \
   --set server.oidc.issuerUrl=https://example.okta.com \
@@ -146,23 +152,64 @@ After setting up your OIDC configuration, you can verify the functionality by vi
 
 ![!image](../images/sso_login.png)
 
+If OpenEverest can't use the OIDC configuration, for example because `clientId` is missing, it turns SSO off and the `everest-server` log says why. The server keeps running, so built-in users can still log in.
+
+## How sign-in works
+
+1. The UI signs the user in with the IdP, using the authorization code flow with PKCE.
+2. The UI sends the **ID token** it received to OpenEverest, which exchanges it for an OpenEverest access token. The exchange is an [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) token-exchange grant on `POST /v1/auth/token`; see [API](../API.md#single-sign-on-users).
+3. The UI calls the API with the OpenEverest access token. The API accepts only tokens that OpenEverest issued; IdP tokens are refused.
+
+OpenEverest accepts an ID token only if:
+
+- it is signed with an asymmetric key from the IdP's published keys (JWKS). Tokens signed with a shared secret (`HS256`) are refused — in Authentik, for example, give the provider a signing key;
+- its issuer (`iss`) equals the configured issuer URL;
+- its audience (`aud`) contains the configured client ID, and its authorized party (`azp`), when present, is the client ID;
+- it was issued in the last 5 minutes and has not expired.
+
+Access tokens and the UserInfo endpoint are not used, because they don't prove which application they were issued to. IdPs that give the browser opaque access tokens, such as Auth0 and Authentik, work, because they still issue a JWT ID token.
+
+The user's groups are read from the `groups` claim of the **ID token** only. Groups that the IdP puts only in the access token or in UserInfo are not seen. In Keycloak, for example, enable **Add to ID token** on the group mapper.
+
+## Keep SSO users signed in
+
+An SSO session in OpenEverest lasts 15 minutes, the lifetime of the OpenEverest access token. When it expires, the OpenEverest UI renews it with your IdP in the background, without prompting the user, and exchanges the new ID token again. To do that, the UI needs a refresh token from the IdP. Without one, SSO users are signed out every 15 minutes.
+
+To get a refresh token:
+
+1. Allow the refresh token grant for the OpenEverest application in your IdP, for example **Refresh Token** in the grant types of the application in Okta or ZITADEL. Keycloak issues refresh tokens by default.
+
+2. Add the `offline_access` scope to the OIDC configuration of OpenEverest, together with the other scopes you need:
+
+    ```sh
+    everestctl settings oidc configure \
+    --issuer-url=<your-issuer-url> \
+    --client-id=<your-app-client-id> \
+    --scopes=openid,profile,email,offline_access
+    ```
+
+    Like any change to the OIDC configuration, this restarts the OpenEverest server. Users get a refresh token the next time they sign in.
+
+Each renewal exchanges a new ID token, so the IdP must include an `id_token` in its refresh token response. Keycloak, Auth0, Microsoft Entra ID, Okta and Google do when the `openid` scope was granted.
+
+OpenEverest issues no refresh token of its own to SSO users, so the IdP stays in control: a user disabled in the IdP loses access when their OpenEverest access token expires, at most about 20 minutes later.
+
 ## OpenEverest OIDC configuration for Microsoft Entra
 
-For Microsoft Entra, request the application's own scope so that the access token has the right audience:
+Use the v2.0 issuer URL of your tenant. OpenEverest compares the issuer of every ID token with it, so the multi-tenant endpoints (`common`, `organizations` and `consumers`) don't work.
 
 ```sh
 everestctl settings oidc configure \
---issuer-url=http://url.com \
---client-id=<your-app-client-id> \
---scopes=openid,profile,email,<your-app-client-id>/.default
+--issuer-url=https://login.microsoftonline.com/<tenant-id>/v2.0 \
+--client-id=<your-app-client-id>
 ```
 
 :::note
 
-Replace `<your-app-client-id>` with your actual Microsoft Entra application (client) ID, and ensure the issuer-url points to the correct tenant.
+Replace `<tenant-id>` with your directory (tenant) ID and `<your-app-client-id>` with your application (client) ID. The default scopes (`openid`, `profile` and `email`) are enough: OpenEverest validates the ID token, whose audience is your application, so the `<your-app-client-id>/.default` scope that older OpenEverest versions needed is not required.
 
 :::
 
-With this configuration, the access token will include `"aud": "<your-app-client-id>"`, and it will have a valid signature that OpenEverest can verify.
+To use group-based RBAC policies, add a groups claim to the app registration in **Token configuration** > **Add groups claim**. By default, Microsoft Entra lists groups by their object IDs, so use those IDs as group names in your RBAC policies.
 
-For a detailed explanation, see the [OIDC integration limitations with Microsoft Entra](../reference/known_limitations.md#oidc-integration-with-microsoft-entra).
+For the limitations, see [OIDC integration with Microsoft Entra](../reference/known_limitations.md#oidc-integration-with-microsoft-entra).

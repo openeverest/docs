@@ -6,8 +6,9 @@ OpenEverest limits the number of requests its API accepts, to protect the server
 | --- | --- | --- |
 | API requests per second, for the whole server | 100 | Helm value `server.apiRequestsRateLimit` |
 | Login requests (password grant) per second, per client IP address | 5 | Environment variable `LOGIN_RATE_LIMIT` |
+| SSO token exchanges per second, per client IP address | 10 | Environment variable `SSO_TOKEN_EXCHANGE_RATE_LIMIT` |
 
-When a limit is reached, the API responds with `429 Too Many Requests`. Repeated failed logins from the same IP address are slowed down further, with increasing delays.
+When a limit is reached, the API responds with `429 Too Many Requests`. Repeated failed logins from the same IP address are slowed down further, with increasing delays. SSO token exchanges have their own limit, so SSO users renewing their sessions in many browser tabs don't use up the password login limit.
 
 ## Change the limits
 
@@ -15,6 +16,7 @@ Large installations with many instances and users may need a higher API limit. S
 
 ```sh
 helm upgrade everest-core openeverest/openeverest \
+  --version 2.0.0-alpha.1 \
   --namespace everest-system \
   --reuse-values \
   --set server.apiRequestsRateLimit=200

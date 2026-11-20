@@ -1,14 +1,14 @@
 # Known limitations
 
-OpenEverest 2 is a Developer Preview. This page lists what is missing or behaves differently from what you might expect. Many of these limitations will be removed before the General Availability release.
+OpenEverest 2 is in Alpha. This page lists what is missing or behaves differently from what you might expect. Many of these limitations will be removed before the General Availability release.
 
 ## Installation and upgrades
 
 - **Not for production.** Use OpenEverest 1.x for production workloads.
-- **No upgrades between Developer Previews.** The `Instance` and `Provider` APIs change between previews without a migration path. Install each preview on a fresh cluster.
+- **No upgrades between preview releases.** The APIs change between Developer Previews, Alphas and Betas without a migration path. Install each one on a fresh cluster.
 - **No migration from OpenEverest 1.x yet.** A migration path is planned for the General Availability release. OpenEverest 1.x and 2 can't run in the same cluster.
 - **Helm only.** `everestctl install`, `uninstall`, `upgrade` and `namespaces` still target OpenEverest 1.x, and `everestctl` is not published as a binary for OpenEverest 2. Commands such as `everestctl accounts` and `everestctl settings` work when built from source.
-- **Provider versions must match the core.** A provider built for an earlier preview may not work with a later core. Check the compatibility shown in the Plugin Hub.
+- **Provider versions must match the core.** A provider built for another OpenEverest release may not work. Each provider's README lists the OpenEverest versions it supports.
 - **One cluster.** OpenEverest manages only the Kubernetes cluster it runs in (`main`).
 
 ## Capabilities depend on the provider
@@ -20,20 +20,29 @@ Backups, point-in-time recovery, monitoring, exposure options, editable settings
 - **Suspend, resume and restart** of instances are not available.
 - **Instance logs** and a **components** view are not available in the UI. Use `kubectl logs` and `kubectl get pods`.
 - **Instance presets** can be used but not created or edited in the UI. See [Instance presets](../administer/instance_presets.md).
-- **Time-based backup retention** can be set only with `kubectl`. The UI edits count-based retention.
 - **OpenEverest users and RBAC policies** are managed with `everestctl` or `kubectl`, not in the UI. See [Users](../administer/manage_users.md) and [RBAC](../administer/rbac.md).
-- **Read-only users** may see a `403` error on the instance page, because they lack the `read-connection` permission needed to show the credentials.
+
+## Instance status
+
+- **Spec edits are not checked against running operations.** A spec change, a second restore or a backup during a restore is accepted; the UI holds edits back while a restore, an upgrade or a storage resize runs.
+- **After a provider restart, a stalled instance shows a warning again** for a full deadline (10 or 30 minutes) before it reads as stalled.
+- **`kubectl get instances` shows the last status while the provider hasn't reported on a change yet.** `kubectl describe`, `everestctl` and the UI show the `Unattended` condition when no provider is working on the instance.
+- **Argo CD has no built-in health check for instances yet.**
+
+## Lifecycle events
+
+- **Events are kept for the cluster's Event TTL**, one hour by default. See [Lifecycle events](../administer/events.md#retention-and-limitations).
 
 ## Backups
 
-- **Backup storage must be S3-compatible.** Other storage types are not supported.
+- **Only S3-compatible storage ships with OpenEverest**, as the `s3` backup storage class. Other storage technologies need their own backup storage class, and a backup class that can write to it.
+- **The credentials Secrets of backup storages are not protected from deletion yet.** Deleting one that a storage uses stops that storage's backups until the Secret is back. See [Secrets and credentials](../security/secrets.md#secrets-in-use-cant-be-deleted).
+- **OpenEverest doesn't test that a bucket is reachable** when a storage is added. A wrong endpoint or wrong credentials show up when the first backup fails.
 - Some engines can upload point-in-time recovery data to **only one storage** per instance, for example MongoDB and MySQL.
 
 ## Monitoring
 
-- Monitoring is configured with `kubectl` only. UI support for monitoring destinations is not available yet.
-- The **Settings** > **Monitoring endpoints** page belongs to the previous monitoring model and no longer configures instance monitoring.
-- Monitoring extensions are in early development and are installed from their repositories.
+- Monitoring extensions are in early development. Each provider supports a different set of them; see the compatibility the `MonitoringClass` reports for each provider.
 - OpenEverest does not collect Kubernetes infrastructure metrics (nodes, pods, kube-state-metrics).
 
 See [Monitoring](../use/monitoring.md).
@@ -44,41 +53,8 @@ The initial password of the `admin` user is stored in plain text in the `everest
 
 ## OIDC integration with Microsoft Entra
 
-When integrating Microsoft Entra ID as your OIDC provider for OpenEverest, it's essential to ensure that the access tokens issued are compatible with OpenEverest's token validation logic.
+- **Single-tenant issuer URL only.** OpenEverest accepts an ID token only if its issuer matches the configured issuer URL. Use the v2.0 issuer URL of your tenant, `https://login.microsoftonline.com/<tenant-id>/v2.0`. The multi-tenant endpoints (`common`, `organizations` and `consumers`) are not supported.
 
-**Problem**
+- **Users in more than 200 groups get no group-based permissions.** Above that limit, Microsoft Entra leaves out the `groups` claim of the ID token and adds a reference to Microsoft Graph instead (the groups overage claim). OpenEverest doesn't query Microsoft Graph, so these users get only the permissions granted to their subject. To stay under the limit, emit only the groups assigned to the application (**Token configuration** > **Add groups claim** > **Groups assigned to the application**).
 
-By default, Microsoft Entra issues access tokens intended for use with Microsoft's own APIs (e.g., Microsoft Graph). These tokens have the following characteristics:
-
-- **Audience (aud):** "`00000003-0000-0000-c000-000000000000`" (Microsoft Graph)
-
-- **Signature:** Uses a proprietary mechanism that cannot be validated by OpenEverest
-
-Microsoft Entra generates access tokens using a proprietary signature mechanism, which OpenEverest cannot validate. This results in signature verification failures when integrating OpenEverest with Entra-generated tokens.
-
-**Solution**
-
-To obtain access tokens that OpenEverest can validate, request tokens explicitly scoped for the registered application in Microsoft Entra using the `<application-client-id>/.default scope`. This ensures:
-
-- **Audience (aud):** Set to your application's client ID
-
-- **Signature:** Standard JWT, verifiable using the issuer's public keys
-
-**OpenEverest configuration**
-
-Add the application's scope to the OIDC scopes, for example with `everestctl` (or in `oidc.config`, see [Single sign-on](../security/sso_idp_integration.md#configure-openeverest)):
-
-```sh
-everestctl settings oidc configure \
---issuer-url=http://url.com \
---client-id=<your-app-client-id> \
---scopes=openid,profile,email,<your-app-client-id>/.default
-```
-
-:::note
-
-Note: Replace `<your-app-client-id>` with your actual Microsoft Entra application (client) ID, and ensure the issuer-url points to the correct tenant.
-
-:::
-
-With this configuration, the access token will include `"aud": "<your-app-client-id>"`, and it will have a valid signature that OpenEverest can verify.
+See [OpenEverest OIDC configuration for Microsoft Entra](../security/sso_idp_integration.md#openeverest-oidc-configuration-for-microsoft-entra) for the setup.

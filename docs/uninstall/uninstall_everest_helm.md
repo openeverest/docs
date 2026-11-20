@@ -27,8 +27,8 @@ To uninstall OpenEverest, follow these steps:
 
     ```sh
     NAME                              NAMESPACE       REVISION  STATUS    CHART
-    everest-core                      everest-system  1         deployed  openeverest-2.0.0-dev.4
-    provider-percona-server-mongodb   everest-system  1         deployed  provider-percona-server-mongodb-0.5.0
+    everest-core                      everest-system  1         deployed  openeverest-<version>
+    provider-percona-server-mongodb   everest-system  1         deployed  provider-percona-server-mongodb-<version>
     ```
 
     </details>

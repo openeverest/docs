@@ -2,6 +2,7 @@
 
 ## OpenEverest 2
 
+- [OpenEverest 2.0.0 Alpha 1 (2026-11-20)](OpenEverest-2.0.0-alpha.1-2026-11-20.md)
 - [OpenEverest 2.0.0 Developer Preview 4 (2026-10-07)](OpenEverest-2.0.0-dev.4-2026-10-07.md)
 - [OpenEverest 2.0.0 Developer Preview 3 (2026-09-17)](OpenEverest-2.0.0-dev.3-2026-09-17.md)
 - [OpenEverest 2.0.0 Developer Preview 2 (2026-08-14)](OpenEverest-2.0.0-dev.2-2026-08-14.md)

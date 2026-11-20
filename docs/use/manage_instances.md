@@ -6,7 +6,7 @@
 2. On the **Overview** tab, find the card with the setting you want to change — for example *Resources*, *Proxy* or *Advanced configuration* — and click **Edit**.
 3. Change the values and click **Save**.
 
-The instance switches to **Updating** while the provider rolls out the change, then returns to **Ready**.
+The instance shows **Applying changes** while the provider rolls out the change, then returns to **Ready**. A highly available instance usually stays available meanwhile, shown as **Applying changes · available**.
 
 Which settings you can change after creation is decided by the provider. Cards without an **Edit** button are read-only, and some fields — such as the topology — can only be set at creation.
 
@@ -58,4 +58,4 @@ kubectl delete instance orders-db -n demo
 
 ## Suspend, resume and restart
 
-Suspending, resuming and restarting instances from the UI is not available in the OpenEverest 2 Developer Preview yet.
+Suspending, resuming and restarting instances from the UI is not available in OpenEverest 2 yet.

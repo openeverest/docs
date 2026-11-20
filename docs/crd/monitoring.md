@@ -4,7 +4,7 @@ The `monitoring.openeverest.io` API group holds the resources that connect insta
 
 :::info[Work in progress]
 
-These resources were added after OpenEverest 2.0.0 Developer Preview 4. Fields may change before General Availability.
+These resources are new in OpenEverest 2.0.0 Alpha 1. Fields may change before General Availability.
 
 :::
 

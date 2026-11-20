@@ -10,7 +10,7 @@ The new instance is created in the same namespace as the backup, with the same p
 2. Select **From a backup** and choose the backup, or select **From a Point-in-time (PITR)** and choose the storage and the time to recover to.
 3. Continue to the creation form. It is pre-filled with the configuration of the source instance. Change the name and any settings you need, then click **Create**.
 
-The new instance starts in the **Restoring** phase and becomes **Ready** when the data is loaded.
+The new instance shows **Restoring** and becomes **Ready** when the data is loaded. If it can't be created from the backup, for example because the source backup is missing or the user credentials don't match the backup, its `DataSourceReady` condition says why.
 
 ## Import a backup from storage
 

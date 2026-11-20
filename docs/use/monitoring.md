@@ -4,7 +4,7 @@ OpenEverest installs no monitoring system, agents or metrics stack. Instead, it 
 
 :::info[Work in progress]
 
-Monitoring is being rebuilt as an extension point during the OpenEverest 2 Developer Preview. The API described on this page is available; UI support is still being added, so configure monitoring with `kubectl` for now. Names, fields and behavior may change before General Availability.
+Monitoring extensions are new in OpenEverest 2.0.0 Alpha 1. Names, fields and behavior may change before General Availability.
 
 :::
 
@@ -160,8 +160,8 @@ Then check the logs of the monitoring extension's controller and of the instance
 
 ## Access control
 
-With [RBAC](../administer/rbac.md) enabled, users need `read` on `monitoring-destinations` to use a destination in an instance, and `create` or `update` to manage destinations. Creating a destination lets the monitoring extension send a Secret from the namespace to the destination's address, so grant it only to users who are trusted with the namespace's Secrets. `monitoring-classes` and `monitoring-bindings` are read-only.
+With [RBAC](../administer/rbac.md) enabled, users need `read` on `monitoring-destinations` to use a destination in an instance, and `create` or `update` to manage destinations. Creating a destination that references a Secret, or changing the spec of one that does, also needs `use` on that Secret; see [Secrets and credentials](../security/secrets.md). Creating a destination lets the monitoring extension send a Secret from the namespace to the destination's address, so grant it only to users who are trusted with the namespace's Secrets. `monitoring-classes` and `monitoring-bindings` are read-only.
 
-## Monitoring endpoints in Settings (legacy)
+## Monitoring endpoints (removed)
 
-The **Settings** > **Monitoring endpoints** page and the `MonitoringConfig` resource belong to the previous monitoring model and are being removed. Current providers don't use them to configure monitoring. Use monitoring destinations instead.
+The **Settings** > **Monitoring endpoints** page and the `MonitoringConfig` resource of the previous monitoring model were removed in OpenEverest 2.0.0 Alpha 1. Use monitoring destinations instead: **Settings** > **Monitoring destinations** in the UI.

@@ -14,7 +14,7 @@ OpenEverest can use Transport Layer Security (TLS) for all incoming connections 
 
 :::info[Important]
 
-The examples below use Helm. To enable TLS on an existing installation, use the same values with `helm upgrade everest-core openeverest/openeverest --namespace everest-system --reuse-values`.
+The examples below use Helm. To enable TLS on an existing installation, use the same values with `helm upgrade everest-core openeverest/openeverest --version 2.0.0-alpha.1 --namespace everest-system --reuse-values`.
 
 :::
 
@@ -50,7 +50,7 @@ Here are the steps to set up the OpenEverest server using cert-manager:
 2. Install OpenEverest using the above values:
 
     ```sh
-    helm install everest-core openeverest/openeverest --devel --create-namespace \
+    helm install everest-core openeverest/openeverest --version 2.0.0-alpha.1 --create-namespace \
     -n everest-system \
     -f values.yaml
     ```
@@ -63,7 +63,7 @@ Here are the steps to set up the OpenEverest server using cert-manager:
 Use self-signed certificates (automatically generated during installation):
 
 ```sh
-helm install everest-core openeverest/openeverest --devel --create-namespace \
+helm install everest-core openeverest/openeverest --version 2.0.0-alpha.1 --create-namespace \
 -n everest-system \
 --set server.tls.enabled=true
 ```
@@ -91,7 +91,7 @@ Here are the steps to set up the OpenEverest server using custom certificates:
 3. Install OpenEverest using the above values:
 
     ```sh
-    helm install everest-core openeverest/openeverest --devel --create-namespace \
+    helm install everest-core openeverest/openeverest --version 2.0.0-alpha.1 --create-namespace \
     -n everest-system \
     -f values.yaml
     ```

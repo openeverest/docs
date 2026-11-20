@@ -21,7 +21,7 @@ You can create an instance with the provider's defaults in a few clicks, or go t
 
 3. Click **Create** to use the defaults, or **Configure more options** to change them.
 
-The instance appears on the **Instances** page with the status **Provisioning** or **Initializing** and becomes **Ready** when it is up.
+The instance appears on the **Instances** page with the status **Creating** and becomes **Ready** when it is up. See [Instance status](instances.md#instance-status).
 
 ## Configure more options
 

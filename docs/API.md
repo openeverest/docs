@@ -20,6 +20,8 @@ Resources are addressed by cluster and namespace. OpenEverest manages one cluste
 /v1/clusters/main/namespaces/{namespace}/instances/{instance}/connection
 /v1/clusters/main/namespaces/{namespace}/backups
 /v1/clusters/main/namespaces/{namespace}/backup-storages
+/v1/clusters/main/namespaces/{namespace}/secrets
+/v1/clusters/main/events
 ```
 
 ## Authentication
@@ -41,7 +43,23 @@ curl -s -X POST http://localhost:8080/v1/auth/token \
   -d '{"grant_type": "refresh_token", "refresh_token": "<refresh token>"}'
 ```
 
-To log out, revoke the refresh token with `POST /v1/auth/revoke`. For single sign-on users, use the access token issued by your identity provider. See [Sessions and tokens](security/session_management.md).
+To log out, revoke the refresh token with `POST /v1/auth/revoke`. See [Sessions and tokens](security/session_management.md).
+
+### Single sign-on users
+
+SSO users exchange an ID token from the identity provider for an OpenEverest access token, with the [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) token-exchange grant. The ID token must have been issued to the OpenEverest client in the last 5 minutes:
+
+```sh
+TOKEN=$(curl -s -X POST http://localhost:8080/v1/auth/token \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
+    "subject_token": "<ID token>",
+    "subject_token_type": "urn:ietf:params:oauth:token-type:id_token"
+  }' | jq -r .access_token)
+```
+
+The response has no refresh token. When the access token expires, get a new ID token from the identity provider and exchange it again. IdP tokens can't be used with the API directly. See [Single sign-on](security/sso_idp_integration.md#how-sign-in-works).
 
 Then call the API:
 
