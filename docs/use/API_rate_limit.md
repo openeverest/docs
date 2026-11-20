@@ -16,6 +16,7 @@ Large installations with many instances and users may need a higher API limit. S
 
 ```sh
 helm upgrade everest-core openeverest/openeverest \
+  --version 2.0.0-alpha.1 \
   --namespace everest-system \
   --reuse-values \
   --set server.apiRequestsRateLimit=200

@@ -95,7 +95,7 @@ The configuration is stored in the `everest-settings` ConfigMap in the `everest-
 
 ```sh
 helm install everest-core openeverest/openeverest \
-  --devel \
+  --version 2.0.0-alpha.1 \
   --namespace everest-system \
   --create-namespace \
   --set server.oidc.issuerUrl=https://example.okta.com \

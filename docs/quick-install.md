@@ -67,12 +67,12 @@ Add the OpenEverest Helm repository and install the core into the `everest-syste
 helm repo add openeverest https://openeverest.github.io/helm-charts/
 helm repo update
 helm install everest-core openeverest/openeverest \
-  --devel \
+  --version 2.0.0-alpha.1 \
   --namespace everest-system \
   --create-namespace
 ```
 
-`--devel` installs the newest OpenEverest 2 preview; without it, Helm picks the newest stable release, which is OpenEverest 1.x.
+`--version` installs OpenEverest 2.0.0-alpha.1. Without it, Helm installs the newest stable release, OpenEverest 1.x. `--devel` is not enough either: Helm ranks pre-release labels alphabetically, so it picks the older 2.0.0-dev.4.
 
 Wait until the pods are running:
 

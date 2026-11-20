@@ -18,7 +18,7 @@ Telemetry is on by default. To turn it off, set the Helm value `telemetry` to `f
 
 ```sh
 helm install everest-core openeverest/openeverest \
-  --devel \
+  --version 2.0.0-alpha.1 \
   --namespace everest-system \
   --create-namespace \
   --set telemetry=false
@@ -28,6 +28,7 @@ Or on an existing installation:
 
 ```sh
 helm upgrade everest-core openeverest/openeverest \
+  --version 2.0.0-alpha.1 \
   --namespace everest-system \
   --reuse-values \
   --set telemetry=false
