@@ -56,6 +56,10 @@ By default, instances are reachable only from inside the cluster. You have two o
 
     Then connect to `localhost:5432` with the user name and password from the connection details.
 
+## Verify the server certificate
+
+Connections to an instance can be encrypted with TLS. To also verify the server, connect with full verification (for PostgreSQL, `sslmode=verify-full`) and the CA certificate the provider publishes as `ca.crt` in the connection Secret. To have the certificates signed by your own CA, see [TLS for database instances](../security/database_tls.md).
+
 ## Change the credentials
 
 To set the initial credentials yourself instead of letting the provider generate them, reference a Secret in `spec.userSecretRef` when you create the instance. See [Instance](../crd/instance.md).

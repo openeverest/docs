@@ -209,6 +209,11 @@
           "type": "doc",
           "id": "security/tls_setup",
           "label": "TLS"
+        },
+        {
+          "type": "doc",
+          "id": "security/database_tls",
+          "label": "TLS for database instances"
         }
       ]
     },
