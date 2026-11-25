@@ -9,7 +9,7 @@ A provider adds one technology to OpenEverest. You can install as many providers
 
 ## Find a provider
 
-The **Plugin Hub** in the OpenEverest UI lists all published providers, with their maturity, the OpenEverest versions they support, whether they are installed, and the exact `helm install` command for each. Open it from the **Plugin Hub** entry in the left menu. The same catalog is available on [GitHub](https://github.com/openeverest/hub).
+The **Plugin Hub** in the OpenEverest UI lists all published providers, with their maturity, the newest release that works with your OpenEverest, whether they are installed, and the exact `helm install` command for each. Open it from the **Plugin Hub** entry in the left menu. The same catalog is available on [GitHub](https://github.com/openeverest/hub).
 
 What each provider supports — topologies, backups, point-in-time recovery, monitoring, exposure options — differs. The provider's page in the Plugin Hub and its README describe its capabilities and configuration.
 
@@ -35,7 +35,7 @@ The provider appears in the UI immediately: on the **Instances** page, in the **
 
 :::warning[Match the provider and core versions]
 
-Until General Availability, the OpenEverest APIs still change between releases, and a provider built for a newer OpenEverest may not start on an older one. A provider built for an older OpenEverest may not work with a newer one either. Helm installs the newest provider release. If it doesn't start — for example with an error about a missing kind — install a provider release built for your OpenEverest version with `--version`. Each provider's README and release notes list the OpenEverest versions it supports.
+Each provider release is built for one OpenEverest release, and works with the OpenEverest releases that accept it. Helm installs the newest provider release. If that release needs a newer OpenEverest than the one installed, the install fails before anything is applied, and the error names the OpenEverest it needs. Install an older provider release with `--version`: the Plugin Hub offers the newest one that works with your OpenEverest. See [Extension compatibility](../extend/compatibility.md).
 
 :::
 
@@ -49,7 +49,7 @@ helm show values oci://ghcr.io/openeverest/charts/provider-percona-postgresql
 
 ## Upgrade a provider
 
-Providers are upgraded independently of the core:
+Providers are upgraded independently of the core, to a release that works with the installed OpenEverest:
 
 ```sh
 helm upgrade provider-percona-postgresql \
@@ -58,7 +58,7 @@ helm upgrade provider-percona-postgresql \
   --version <version>
 ```
 
-See [Upgrade](../upgrade/upgrade_with_helm.md).
+See [Upgrade](../upgrade/upgrade_with_helm.md) and [Upgrade order](../extend/compatibility.md#upgrade-order).
 
 ## Remove a provider
 

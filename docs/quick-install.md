@@ -110,7 +110,7 @@ provider-percona-postgresql   90s
 
 :::note[Provider versions]
 
-Providers are released separately from OpenEverest, and each provider release is built for a specific OpenEverest version. Helm installs the newest provider release. If the provider does not start, it may need a newer OpenEverest than the one installed — see [Match the provider and core versions](install/install_providers.md#install-a-provider).
+Providers are released separately from OpenEverest, and each provider release is built for a specific OpenEverest version. Helm installs the newest provider release. If it needs a newer OpenEverest than the one installed, the install fails and names the OpenEverest it needs — see [Match the provider and core versions](install/install_providers.md#install-a-provider) and [Extension compatibility](extend/compatibility.md).
 
 :::
 
