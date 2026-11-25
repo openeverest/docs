@@ -1,6 +1,6 @@
 # Upgrade OpenEverest
 
-The OpenEverest core and each provider are separate Helm releases with their own versions. You upgrade them separately: first the core, then the providers.
+The OpenEverest core and each provider are separate Helm releases with their own versions. You upgrade them separately: first the core, then the providers. See [Upgrade order](../extend/compatibility.md#upgrade-order) for why.
 
 :::warning[Alpha]
 
@@ -13,7 +13,7 @@ The procedure below describes how upgrades work, for patch releases and for futu
 ## Before you upgrade
 
 - Read the [release notes](../release-notes/release_notes_index.md) of the target version, especially the breaking changes.
-- Check which providers support the target version. The Plugin Hub and the provider release notes show the compatible core versions.
+- Check that every installed provider and other extension has a release that works with the target version. See [Upgrade order](../extend/compatibility.md#upgrade-order).
 - Back up your instances. See [Create backups](../backups_and_restore/create_backups.md).
 - Check your current releases:
 
@@ -54,7 +54,7 @@ The chart runs pre-upgrade checks. To skip them, set `upgrade.preflightChecks=fa
 
 ## 3. Upgrade the providers
 
-Upgrade each provider to a version that supports the new core:
+Upgrade each provider to the newest release that works with the new core. The Plugin Hub offers it, and [Extension compatibility](../extend/compatibility.md#find-the-release-that-works) shows other ways to find it:
 
 ```sh
 helm upgrade provider-percona-postgresql \

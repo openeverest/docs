@@ -21,7 +21,7 @@ Extensions are organized into three groups:
 
 Authors contribute an extension by opening a pull request against the repository (see [Publishing an extension](#publishing-an-extension)). Because the formula is a pointer rather than code, review focuses on metadata accuracy and naming, not on a code audit.
 
-When a pull request is merged into `main`, a GitHub Actions workflow regenerates an aggregated JSON manifest, `index/index.json`, and commits it back to the repository. This manifest contains the consolidated metadata for every extension in the catalog and is the single source of truth consumed by the Plugin Hub.
+When a pull request is merged into `main`, a GitHub Actions workflow regenerates an aggregated JSON manifest, `index/index.json`, and commits it back to the repository. This manifest contains the consolidated metadata for every extension in the catalog and is the single source of truth consumed by the Plugin Hub. For every release of every extension, it also records the OpenEverest the release was built for, read from the chart itself.
 
 The index is published directly from `main` and served over the GitHub raw CDN:
 
@@ -43,7 +43,9 @@ graph LR
 
 The Plugin Hub is a Generic Plugin that renders the catalog inside the OpenEverest web UI. It is installed as a dependency of OpenEverest v2, so it is available out of the box.
 
-At runtime, the Plugin Hub fetches the generated `index.json` from the catalog and joins it with the list of extensions currently installed on your cluster. The result is a searchable, filterable table of every published extension, annotated with its install status, default-channel version, and categories.
+At runtime, the Plugin Hub fetches the generated `index.json` from the catalog and joins it with the list of extensions currently installed on your cluster. The result is a searchable, filterable table of every published extension, annotated with its install status, the newest release that works with your OpenEverest, and categories.
+
+The Plugin Hub compares the OpenEverest each release was built for with the range of releases the OpenEverest in your cluster accepts. It offers the newest release that works, which may be older than the newest release, shows what the others need, and checks the chart again before it installs or upgrades anything. See [Extension compatibility](compatibility.md).
 
 \{/* Screenshot placeholder: Plugin Hub extension browser in the OpenEverest UI */\}
 
@@ -61,7 +63,7 @@ plugins:
 
 Each entry in the Plugin Hub opens a detail view with the extension's description, source repository, maturity, categories, and — for open extensions — installation instructions.
 
-Installation is currently performed outside the UI using Helm with OCI artifacts. For each extension, the detail view shows a copy-pasteable `helm install` command that installs the latest version committed to the catalog. The command follows this shape:
+Installation is currently performed outside the UI using Helm with OCI artifacts. For each extension, the detail view shows a copy-pasteable `helm install` command that installs the newest release that works with your OpenEverest. The command follows this shape:
 
 ```bash
 helm install <release-name> \
@@ -97,6 +99,8 @@ To add your own Provider, Generic Plugin, or integration to the catalog:
 3. Fill in `formula.yaml`, add a `README.md` and a logo, and open a pull request against `main`. For an integration, set `metadata.type` to `integration` and declare its `spec.integration` area and capabilities. See [Publish a monitoring extension](monitoring-extensions.md#publish-to-the-hub).
 4. Automated validation checks the schema, naming, and required files. A maintainer reviews the metadata, and on merge the index is regenerated automatically.
 
+The formula does not declare which OpenEverest versions your extension works with. The index reads, from the `Chart.yaml` of each release, the OpenEverest it was built for, which the Provider SDK and OpenEverest's other build tooling write. Releases built for an unreleased OpenEverest are left out. See [Extension compatibility](compatibility.md).
+
 For the full field reference and step-by-step instructions, see the [publishing guide](https://github.com/openeverest/hub/blob/main/docs/PUBLISHING.md) in the catalog repository.
 
 ## Further reading
@@ -104,6 +108,7 @@ For the full field reference and step-by-step instructions, see the [publishing 
 - [Hub catalog](https://github.com/openeverest/hub) — the registry repository and `formula.yaml` schema.
 - [Publishing guide](https://github.com/openeverest/hub/blob/main/docs/PUBLISHING.md) — how to add an extension.
 - [Spec 007 — Extension Hub](https://github.com/openeverest/specs/blob/main/specs/007-extension-hub.md) — the full design.
+- [Extension compatibility](compatibility.md) — which extension releases work with your OpenEverest.
 - [Providers](providers.md) — database and storage extensions.
 - [Generic Plugins](generic-plugins.md) — UI, CLI, and backend extensions.
 - [Monitoring extensions](monitoring-extensions.md) — integrations with external monitoring systems.

@@ -246,6 +246,11 @@
           "type": "doc",
           "id": "extend/hub",
           "label": "Plugin Hub"
+        },
+        {
+          "type": "doc",
+          "id": "extend/compatibility",
+          "label": "Compatibility"
         }
       ]
     },
