@@ -114,8 +114,9 @@ Created by OpenEverest for every entry in an instance's `spec.monitoring.destina
 | Field | Description |
 | --- | --- |
 | `Instance.spec.monitoring.destinations[]` | Up to 8 entries, each with a `name`, a `destinationRef.name` in the instance's namespace and optional `parameters`. Each destination can be listed once. |
+| `Instance.spec.monitoring.sources.metrics.policy` | `OnDemand` (default): the provider runs its metrics exporters while a destination's class needs metrics. `Always`: it runs them even without destinations, for scrapers OpenEverest does not configure. |
 | `Instance.status.monitoring.destinations[]` | Per entry: the resolved `mode` and the `configured` status, `reason` and `message` from the binding. |
-| `Instance.status.monitoring.sources` | The metrics endpoints and credentials the instance publishes for extension-managed classes. |
+| `Instance.status.monitoring.sources` | The metrics endpoints and credentials the instance publishes for extension-managed classes and for scrapers you configure yourself. |
 | `Instance` condition `MonitoringConfigured` | `True` when every destination is configured. |
 | `Provider.spec.monitoring.integrations` | Operator-native integrations the provider can render, keyed by name (for example `pmm`), with the supported `agentVersions` and `authModes`. |
 | `Provider.spec.monitoring.componentTypes` | What each component type exposes: its engine `kind` (for example `postgresql`) and whether `metrics` are `Native`, through an `Exporter`, or `None`. |
