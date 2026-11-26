@@ -320,6 +320,11 @@
         },
         {
           "type": "doc",
+          "id": "reference/metrics",
+          "label": "OpenEverest metrics"
+        },
+        {
+          "type": "doc",
           "id": "reference/AI_disclaimer_for_docs",
           "label": "AI usage disclaimer"
         },

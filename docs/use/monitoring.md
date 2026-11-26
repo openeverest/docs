@@ -2,6 +2,8 @@
 
 OpenEverest installs no monitoring system, agents or metrics stack. Instead, it connects instances to the monitoring system you already run — PMM, Prometheus, VictoriaMetrics or another one — through **monitoring extensions**. What an instance can send, and to which systems, depends on its provider.
 
+For metrics about OpenEverest itself, such as how many instances there are, which ones need attention and when they were last backed up, see [OpenEverest metrics](../reference/metrics.md).
+
 :::info[Work in progress]
 
 Monitoring extensions are new in OpenEverest 2.0.0 Alpha 1. Names, fields and behavior may change before General Availability.
