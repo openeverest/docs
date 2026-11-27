@@ -37,7 +37,7 @@ Found a typo or didn't find what you needed? Here's how you can contribute to th
 
 1. **Request a doc change through a GitHub issue**. If you've spotted a doc issue (a typo, broken links, inaccurate instructions, etc.) but don't have time or desire to fix it yourself - let us know about it.
 
-    - Go to the [OpenEverest documentation repository issues page](https://github.com/openeverest/everest-doc/issues).
+    - Go to the [OpenEverest documentation repository issues page](https://github.com/openeverest/docs/issues).
     - Sign in to GitHub (create an account if you don't have one) and click **New issue**.
     - Describe the issue you have detected, including steps to reproduce, affected version, and any relevant details.
 

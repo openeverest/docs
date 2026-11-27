@@ -18,7 +18,7 @@ OpenEverest is open source and thrives on community contributions. No contributi
 | Area | Description | Link |
 | :--- | :--- | :--- |
 | **Code** | Improve the OpenEverest platform engine, APIs, or CLI. | [openeverest/openeverest](https://github.com/openeverest/openeverest) |
-| **Documentation** | Help improve user guides, installation docs, or reference materials. | [openeverest/everest-doc](https://github.com/openeverest/everest-doc) |
+| **Documentation** | Help improve user guides, installation docs, or reference materials. | [openeverest/docs](https://github.com/openeverest/docs) |
 | **Blog & Website** | Fix typos, suggest new content, or redesign pages. | [openeverest/openeverest.github.io](https://github.com/openeverest/openeverest.github.io) |
 
 > **Note:** We welcome PRs and issues! Please check our contribution guidelines in each repository before getting started.
