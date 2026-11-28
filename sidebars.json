@@ -56,6 +56,11 @@
           "type": "doc",
           "id": "install/install_providers",
           "label": "Add providers"
+        },
+        {
+          "type": "doc",
+          "id": "install/install_with_argocd",
+          "label": "Install with Argo CD"
         }
       ]
     },

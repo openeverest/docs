@@ -27,7 +27,7 @@ Backups, point-in-time recovery, monitoring, exposure options, editable settings
 - **Spec edits are not checked against running operations.** A spec change, a second restore or a backup during a restore is accepted; the UI holds edits back while a restore, an upgrade or a storage resize runs.
 - **After a provider restart, a stalled instance shows a warning again** for a full deadline (10 or 30 minutes) before it reads as stalled.
 - **`kubectl get instances` shows the last status while the provider hasn't reported on a change yet.** `kubectl describe`, `everestctl` and the UI show the `Unattended` condition when no provider is working on the instance.
-- **Argo CD has no built-in health check for instances yet.**
+- **Argo CD has no built-in health check for instances yet.** Add the custom check from [Install with Argo CD](../install/install_with_argocd.md#step-1-add-a-health-check-for-instances).
 
 ## Lifecycle events
 
