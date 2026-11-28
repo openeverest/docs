@@ -196,4 +196,6 @@ helm show values openeverest/openeverest --version 2.0.0-alpha.1
 
 ## Next steps
 
+To manage OpenEverest with GitOps, see [Install with Argo CD](install_with_argocd.md).
+
 <span className="oe-button">[Add providers →](install_providers.md)</span>  <span className="oe-button">[Create an instance →](../use/create_instance.md)</span>
